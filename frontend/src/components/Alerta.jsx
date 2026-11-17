@@ -1,4 +1,16 @@
+import { useEffect, useRef } from 'react';
+import { useDialogo } from '../context/DialogoContext';
+
+// Centraliza todos los avisos existentes en el modal del sistema.
 export default function Alerta({ tipo = 'info', mensaje }) {
-  if (!mensaje) return null;
-  return <div className={`alerta ${tipo}`}>{mensaje}</div>;
+  const { notificar } = useDialogo();
+  const ultimo = useRef(null);
+  useEffect(() => {
+    if (!mensaje) { ultimo.current = null; return; }
+    const clave = `${tipo}:${mensaje}`;
+    if (ultimo.current === clave) return;
+    ultimo.current = clave;
+    notificar({ tipo, mensaje });
+  }, [tipo, mensaje, notificar]);
+  return null;
 }

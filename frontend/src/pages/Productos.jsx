@@ -43,14 +43,15 @@ export default function Productos() {
     <section>
       <div className="heroPanel catalogoHero">
         <div>
-          <span className="miniTag">Catálogo de compras</span>
+          <span className="miniTag">La selección TechZone</span>
           <h2>Elige tus productos</h2>
-          <p>Busca, filtra por categoría y agrega productos al carrito de forma rápida.</p>
+          <p>Hardware y periféricos para trabajar, crear y jugar. Encuentra tu próxima mejora.</p>
         </div>
       </div>
 
       <Alerta tipo="error" mensaje={mensaje} />
 
+      <div className="catalogoResumen"><span>{filtrados.length} productos</span><span>Precios en soles · IGV incluido</span></div>
       <div className="filtros filtrosCliente">
         <div className="inputIcono">
           <Search size={18} />

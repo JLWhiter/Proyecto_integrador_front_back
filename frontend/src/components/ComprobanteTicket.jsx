@@ -6,7 +6,7 @@ export default function ComprobanteTicket({ venta }) {
   const [qrUrl, setQrUrl] = useState('');
 
   const esFactura = venta?.tipoDocumento?.toLowerCase().includes('factura');
-  const tipoTitulo = esFactura ? 'FACTURA ELECTRÓNICA' : 'BOLETA DE VENTA ELECTRÓNICA';
+  const tipoTitulo = esFactura ? 'FACTURA DE VENTA' : 'BOLETA DE VENTA';
   const tipoDocCodigo = esFactura ? '01' : '03';
 
   const emisor = {
@@ -33,7 +33,7 @@ export default function ComprobanteTicket({ venta }) {
 
   const fmt = (v) => Number(v ?? 0).toFixed(2);
   const totalNum = Number(venta?.total || 0);
-  const opGravadaNum = Number(venta?.opGravada ?? (totalNum / (1 + Number(venta?.igvPorcentaje || 18) / 100)));
+  const opGravadaNum = Number(venta?.opGravada ?? (totalNum / (1 + Number(venta?.igvPorcentaje ?? 18) / 100)));
   const igvNum = Number(venta?.igv ?? (totalNum - opGravadaNum));
 
   const totalStr = totalNum.toFixed(2);
@@ -45,7 +45,7 @@ export default function ComprobanteTicket({ venta }) {
   const horaStr = formatoHora(fechaObj);
   const montoEnLetras = numeroALetras(totalNum);
 
-  const docCliente = venta?.docCliente || venta?.numeroDocumentoCliente || (esFactura ? '20601234567' : (venta?.idCliente?.replace(/\D/g, '') || '71262017'));
+  const docCliente = venta?.docCliente || venta?.numeroDocumentoCliente || 'No registrado';
   const nombreCliente = venta?.cliente || 'CAMILO SANCHEZ';
   const direccionCliente = venta?.direccionCliente || 'CALLE LAS NORMAS 123';
   const medioPago = (venta?.medioPago || 'EFECTIVO').toUpperCase();
@@ -131,7 +131,7 @@ export default function ComprobanteTicket({ venta }) {
               <span>16.95</span>
               <span>20.00</span>
             </div>
-            <div className="ticketItemNombre uppercase">POLO BASICO TALLA SMALL</div>
+            <div className="ticketItemNombre uppercase">ACCESORIO GAMING DE EJEMPLO</div>
           </div>
         )}
       </div>
@@ -169,7 +169,7 @@ export default function ComprobanteTicket({ venta }) {
 
       {/* Código QR */}
       <div className="ticketQrBox">
-        {qrUrl && <img src={qrUrl} alt="Código QR SUNAT Ticket" className="ticketQrImg" />}
+        {qrUrl && <img src={qrUrl} alt="Código QR del comprobante" className="ticketQrImg" />}
       </div>
 
       {/* Leyenda y Resolución */}

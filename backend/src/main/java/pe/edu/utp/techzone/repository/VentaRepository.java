@@ -29,18 +29,18 @@ public interface VentaRepository extends JpaRepository<Venta, String> {
         FROM detalle_venta dv
         INNER JOIN producto p ON dv.id_producto = p.id_producto
         INNER JOIN venta v ON dv.id_venta = v.id_venta
-        WHERE v.fecha_emision >= DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY)
+        WHERE v.fecha_emision >= :desde
         GROUP BY p.nombre
         ORDER BY SUM(dv.cantidad) DESC
         LIMIT 1
         """, nativeQuery = true)
-    String obtenerProductoMasVendidoSemana();
+    String obtenerProductoMasVendidoSemana(@org.springframework.data.repository.query.Param("desde") java.time.LocalDateTime desde);
 
     @Query(value = """
         SELECT COUNT(*) FROM venta
-        WHERE fecha_emision >= DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY)
+        WHERE fecha_emision >= :desde
         """, nativeQuery = true)
-    long contarVentasSemana();
+    long contarVentasSemana(@org.springframework.data.repository.query.Param("desde") java.time.LocalDateTime desde);
 
     @Query(value = """
         SELECT COUNT(DISTINCT id_cliente) FROM venta
@@ -51,9 +51,9 @@ public interface VentaRepository extends JpaRepository<Venta, String> {
         SELECT COALESCE(SUM(dv.subtotal), 0)
         FROM detalle_venta dv
         INNER JOIN venta v ON dv.id_venta = v.id_venta
-        WHERE v.fecha_emision >= DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY)
+        WHERE v.fecha_emision >= :desde
         """, nativeQuery = true)
-    BigDecimal obtenerIngresosSemana();
+    BigDecimal obtenerIngresosSemana(@org.springframework.data.repository.query.Param("desde") java.time.LocalDateTime desde);
 
     @Query(value = """
         SELECT COALESCE(SUM(dv.subtotal), 0)

@@ -50,6 +50,14 @@ export const dashboardService = {
 };
 
 export const catalogoService = {
+  parametros: () => request('/catalogos/parametros'),
   tiposDocumento: () => request('/catalogos/tipos-documento'),
   mediosPago: () => request('/catalogos/medios-pago')
+};
+
+export const documentoService = {
+  estado: () => request('/documentos/estado'),
+  consultar: (tipo, numero, signal) => request('/documentos/consulta', {
+    method: 'POST', body: JSON.stringify({ tipo, numero }), signal
+  })
 };

@@ -46,7 +46,10 @@ private BigDecimal factor() {
             return porDefecto;
         }
         try {
-            return new BigDecimal(texto.trim());
+            BigDecimal valor = new BigDecimal(texto.trim());
+            if (valor.signum() < 0 || valor.compareTo(new BigDecimal("100")) > 0)
+                throw new pe.edu.utp.techzone.exception.BusinessException("IGV configurado fuera del rango 0 a 100");
+            return valor.setScale(2, RoundingMode.HALF_UP);
         } catch (NumberFormatException e) {
             return porDefecto;
         }

@@ -30,11 +30,11 @@ export default function Dashboard({ setVista }) {
 
   const ventasRecientes = useMemo(() => ventas.slice(0, 5), [ventas]);
 
-  if (cargando) return <div className="panelVacio">Cargando estadísticas conectadas a la base de datos...</div>;
+  if (cargando) return <div className="panelVacio">Cargando el resumen de ventas...</div>;
 
   const tarjetas = [
-    { titulo: 'Usuarios registrados', valor: datos?.totalClientes || 0, icono: Users, detalle: 'Clientes en BD' },
-    { titulo: 'Productos activos', valor: datos?.totalProductos || 0, icono: Boxes, detalle: 'Catálogo completo' },
+    { titulo: 'Clientes registrados', valor: datos?.totalClientes || 0, icono: Users, detalle: 'Cuentas de la tienda' },
+    { titulo: 'Productos activos', valor: datos?.totalProductos || 0, icono: Boxes, detalle: 'Disponibles en el catálogo' },
     { titulo: 'Ventas esta semana', valor: datos?.ventasSemana || 0, icono: ShoppingBag, detalle: formatoMoneda(datos?.ingresosSemana) },
     { titulo: 'Ingresos del mes', valor: formatoMoneda(datos?.ingresosMes), icono: WalletCards, detalle: 'Total facturado' }
   ];
@@ -44,8 +44,8 @@ export default function Dashboard({ setVista }) {
       <div className="heroPanel">
         <div>
           <span className="miniTag">Panel administrativo</span>
-          <h2>Estadísticas generales</h2>
-          <p>Vista moderna para controlar ventas, clientes, stock y productos más vendidos.</p>
+          <h2>Resumen de la tienda</h2>
+          <p>Ventas, inventario y actividad reciente de TechZone.</p>
         </div>
         <button className="btnPrincipal" onClick={() => setVista('reportes')}>Ver reportes</button>
       </div>
@@ -87,16 +87,16 @@ export default function Dashboard({ setVista }) {
       <div className="adminGridDos">
         <article className="panelInfo panelDestacado">
           <div className="dashboardIcono"><Trophy size={24} /></div>
-          <h3>Producto vendido esta semana</h3>
+          <h3>Más vendido de la semana</h3>
           <strong>{datos?.productoMasVendidoSemana || 'Sin ventas'}</strong>
-          <p>Este dato sale del detalle de ventas registrado en la base de datos.</p>
+          <p>El producto con más unidades vendidas durante la última semana.</p>
         </article>
 
         <article className="panelInfo panelDestacado">
           <div className="dashboardIcono"><TrendingUp size={24} /></div>
           <h3>Producto más vendido del mes</h3>
           <strong>{datos?.productoMasVendidoMes || 'Sin ventas'}</strong>
-          <p>Útil para explicar indicadores y toma de decisiones en la exposición.</p>
+          <p>La referencia con mayor demanda durante el mes actual.</p>
         </article>
       </div>
 
@@ -106,7 +106,7 @@ export default function Dashboard({ setVista }) {
             <h3>Últimas compras registradas</h3>
             <p>Resumen rápido de las ventas más recientes.</p>
           </div>
-          <button onClick={() => setVista('historial')}>Ver historial completo</button>
+          <button className="btnSecundario" onClick={() => setVista('historial')}>Ver historial completo</button>
         </div>
         <table>
           <thead>

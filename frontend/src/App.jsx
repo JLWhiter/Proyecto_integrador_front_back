@@ -50,9 +50,13 @@ export default function App() {
   }
 
   return (
-    <div className="appLayout">
+    <div className={`appLayout ${esAdmin ? 'appLayoutAdmin' : 'appLayoutTienda'}`}>
       <Navbar vista={vista} setVista={cambiarVista} />
       <main className="contenido">
+        <header className="barraContexto">
+          <span><i aria-hidden="true" />{esAdmin ? 'Administración de la tienda' : 'Hardware y gaming'}</span>
+          <span>Hola, <strong>{sesion?.nombre}</strong></span>
+        </header>
         {renderVista()}
       </main>
     </div>

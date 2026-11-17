@@ -17,3 +17,9 @@ dist/
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Local dependency cache
+.npm-cache/
+.run/
+test-results/
+playwright-report/

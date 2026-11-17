@@ -77,7 +77,7 @@ export default function Historial({ setVista, setVentaGenerada }) {
       <div className="pageHeader modernoHeader">
         <div>
           <span className="miniTag">{esAdmin ? 'Historial administrativo' : 'Mis compras'}</span>
-          <h2>Historial con búsqueda avanzada</h2>
+          <h2>Historial de compras</h2>
           <p>{esAdmin ? 'Filtra por cliente, comprobante, fecha o medio de pago.' : 'Consulta tus comprobantes y vuelve a revisar cada compra.'}</p>
         </div>
       </div>

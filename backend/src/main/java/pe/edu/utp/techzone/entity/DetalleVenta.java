@@ -27,6 +27,11 @@ public class DetalleVenta {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_detalle")
     private Integer idDetalle;
+    @Column(name = "nombre_producto", nullable = false, length = 100)
+    private String nombreProducto;
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal igv;
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_venta", nullable = false)

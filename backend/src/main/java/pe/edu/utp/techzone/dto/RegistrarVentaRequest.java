@@ -18,7 +18,19 @@ public class RegistrarVentaRequest {
     @NotBlank
     private String medioPago;
 
-    private String numeroDocumento;
+    // The receipt number is assigned by the server.
+
+    @NotBlank
+    @jakarta.validation.constraints.Size(max=11)
+    private String docCliente;
+    @jakarta.validation.constraints.Size(max=200)
+    private String razonSocial;
+    @jakarta.validation.constraints.Size(max=255)
+    private String direccionCliente;
+
+    @jakarta.validation.constraints.Size(max=200)
+    private String nombreCliente;
+
 
     @Valid
     @NotEmpty

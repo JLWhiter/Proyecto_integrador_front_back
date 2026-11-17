@@ -42,17 +42,18 @@ export default function Reportes({ setVista, setVentaGenerada }) {
     return Object.values(mapa).sort((a, b) => b.cantidad - a.cantidad).slice(0, 8);
   }, [ventas]);
 
-  const totalIngresos = Number(datos?.ingresosMes || 0);
-  const igvPorcentaje = Number(datos?.igvPorcentaje || 18);
-  const totalOpGravada = totalIngresos / (1 + igvPorcentaje / 100);
-  const totalIgv = totalIngresos - totalOpGravada;
+  const ahora = new Date();
+  const ventasMes = ventas.filter((venta) => {
+    const fecha = new Date(venta.fechaEmision);
+    return fecha.getMonth() === ahora.getMonth() && fecha.getFullYear() === ahora.getFullYear();
+  });
+  const totalIngresos = ventasMes.reduce((suma, venta) => suma + Number(venta.total || 0), 0);
+  const totalOpGravada = ventasMes.reduce((suma, venta) => suma + Number(venta.opGravada || 0), 0);
+  const totalIgv = ventasMes.reduce((suma, venta) => suma + Number(venta.igv || 0), 0);
 
   function abrirComprobante(venta) {
-    const esFactura = (venta.tipoDocumento || '').toLowerCase().includes('factura');
     const ventaCompleta = {
       ...venta,
-      docCliente: esFactura ? '20100100100' : '71262017',
-      direccionCliente: 'CALLE LAS NORMAS 123',
       condicionPago: 'CONTADO',
       observaciones: 'Venta registrada en plataforma'
     };
@@ -65,28 +66,28 @@ export default function Reportes({ setVista, setVentaGenerada }) {
   }
 
   const tarjetas = [
-    { titulo: 'Clientes en BD', valor: datos?.totalClientes || 0, icono: Users },
-    { titulo: 'Ventas de la Semana', valor: datos?.ventasSemana || 0, icono: CalendarDays },
-    { titulo: 'Producto más Vendido', valor: datos?.productoMasVendidoMes || 'Sin ventas', icono: Package },
-    { titulo: 'Total Facturado (Mes)', valor: formatoMoneda(totalIngresos), icono: BarChart3 }
+    { titulo: 'Clientes registrados', valor: datos?.totalClientes || 0, icono: Users },
+    { titulo: 'Ventas de la semana', valor: datos?.ventasSemana || 0, icono: CalendarDays },
+    { titulo: 'Producto más vendido', valor: datos?.productoMasVendidoMes || 'Sin ventas', icono: Package },
+    { titulo: 'Ingresos del mes', valor: formatoMoneda(totalIngresos), icono: BarChart3 }
   ];
 
   return (
     <section className="reportesSeccion">
       <div className="heroPanel no-print">
         <div>
-          <span className="miniTag">Módulo de Reportes & Liquidación Fiscal</span>
-          <h2>Reportes Generales del Sistema</h2>
-          <p>Supervisión tributaria de ventas, cálculo de IGV para SUNAT y control analítico.</p>
+          <span className="miniTag">Ventas e impuestos</span>
+          <h2>Reportes de ventas</h2>
+          <p>Revisa los ingresos, el IGV registrado y los productos con mayor demanda.</p>
         </div>
         <div className="flex gap-2">
           {setVista && (
             <button className="btnPrincipal" onClick={() => setVista('comprobante')}>
-              <FileCheck size={17} /> Ver Boletas y Facturas
+              <FileCheck size={17} /> Ver comprobantes
             </button>
           )}
           <button className="btnSecundario" onClick={() => window.print()}>
-            <Printer size={17} /> Imprimir Reporte
+            <Printer size={17} /> Imprimir reporte
           </button>
         </div>
       </div>
@@ -113,24 +114,24 @@ export default function Reportes({ setVista, setVentaGenerada }) {
 
             <div className="panelTributarioSunat bloqueSeparado">
               <div className="panelTributarioHeader">
-                <div className="iconoSunatBadge">SUNAT</div>
+                <div className="iconoSunatBadge">IGV</div>
                 <div>
-                  <h3>Liquidación Tributaria Estimada (Período Actual)</h3>
-                  <p>Cálculo sobre el valor de venta gravado e impuesto general a las ventas (18%).</p>
+                  <h3>Resumen de impuestos del mes</h3>
+                  <p>Importes e impuestos conservados al registrar cada venta.</p>
                 </div>
               </div>
 
               <div className="desgloseSunatGrid">
                 <div className="sunatItem">
-                  <span>Base Imponible (Op. Gravada)</span>
+                  <span>Base imponible</span>
                   <strong>{formatoMoneda(totalOpGravada)}</strong>
                 </div>
                 <div className="sunatItem">
-                  <span>Débito Fiscal (IGV 18%)</span>
+                  <span>IGV registrado</span>
                   <strong className="textAzul">{formatoMoneda(totalIgv)}</strong>
                 </div>
                 <div className="sunatItem totalItem">
-                  <span>Importe Facturado Total</span>
+                  <span>Total de ventas</span>
                   <strong className="textVerde">{formatoMoneda(totalIngresos)}</strong>
                 </div>
               </div>
@@ -138,8 +139,8 @@ export default function Reportes({ setVista, setVentaGenerada }) {
 
             <div className="adminGridDos bloqueSeparado">
               <article className="panelInfo">
-                <h3>Resumen Ejecutivo Comercial</h3>
-                <p>El sistema sincroniza las ventas en tiempo real con el control de inventario y emisión de comprobantes oficiales.</p>
+                <h3>Actividad de la tienda</h3>
+                <p>Las ventas registradas actualizan las existencias y se incluyen en este resumen.</p>
                 <ul className="listaReporte">
                   <li>Clientes que compraron este período: <b>{datos?.clientesCompraron || 0}</b></li>
                   <li>Productos agotados en almacén: <b>{datos?.productosAgotados || 0}</b></li>
@@ -149,7 +150,7 @@ export default function Reportes({ setVista, setVentaGenerada }) {
               </article>
 
               <article className="panelInfo">
-                <h3>Top Artículos Más Vendidos</h3>
+                <h3>Productos más vendidos</h3>
                 <div className="rankingLista">
                   {productosVendidos.map((item, index) => (
                     <div className="rankingItem" key={item.producto}>
@@ -179,11 +180,11 @@ export default function Reportes({ setVista, setVentaGenerada }) {
               <table>
                 <thead>
                   <tr>
-                    <th>N° Comprobante</th>
+                    <th>N.º de comprobante</th>
                     <th>Cliente</th>
                     <th>Tipo</th>
                     <th>Total</th>
-                    <th className="text-center">Comprobante SUNAT</th>
+                    <th className="text-center">Comprobante</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -220,7 +221,7 @@ export default function Reportes({ setVista, setVentaGenerada }) {
               <div>
                 <h2>DEMOMIFACT / TECHZONE S.A.C.</h2>
                 <p>R.U.C. 20100100100 — CALLE LAS NORMAS 123, LIMA</p>
-                <p>Sistema Integrado de Ventas & Facturación Electrónica</p>
+                <p>Resumen de ventas y comprobantes</p>
               </div>
               <div className="text-right">
                 <h3>REPORTE EJECUTIVO OFICIAL</h3>
@@ -230,7 +231,7 @@ export default function Reportes({ setVista, setVentaGenerada }) {
 
             <hr className="lineaSeparadorImpreso" />
 
-            <h4>1. LIQUIDACIÓN FINANCIERA & TRIBUTARIA SUNAT</h4>
+            <h4>1. RESUMEN FINANCIERO Y TRIBUTARIO</h4>
             <table className="tablaImpresaReporte">
               <thead>
                 <tr>
@@ -248,7 +249,7 @@ export default function Reportes({ setVista, setVentaGenerada }) {
                   <td className="text-right">{formatoMoneda(totalOpGravada)}</td>
                 </tr>
                 <tr>
-                  <td>Débito Fiscal Impuesto General a las Ventas (I.G.V. 18%)</td>
+                  <td>Débito Fiscal Impuesto General a las Ventas (I.G.V.)</td>
                   <td className="text-right">{formatoMoneda(totalIgv)}</td>
                 </tr>
                 <tr>
@@ -283,13 +284,13 @@ export default function Reportes({ setVista, setVentaGenerada }) {
             <div className="firmasReporteImpreso">
               <div className="firmaBox">
                 <div className="lineaFirma"></div>
-                <span>Administrador General</span>
+                <span>Administrador</span>
                 <small>Responsable de Operaciones</small>
               </div>
               <div className="firmaBox">
                 <div className="lineaFirma"></div>
                 <span>Área Contable y Tributaria</span>
-                <small>Revisión SUNAT</small>
+                <small>Revisión administrativa</small>
               </div>
             </div>
           </div>

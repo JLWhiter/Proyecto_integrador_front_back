@@ -15,6 +15,11 @@ import java.util.List;
 @AllArgsConstructor
 public class VentaDTO {
     private String idVenta;
+
+    private String docCliente;
+    private String razonSocial;
+    private String direccionCliente;
+
     private String idCliente;
     private String cliente;
     private String tipoDocumento;

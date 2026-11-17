@@ -15,9 +15,12 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductoDTO {
+    @NotNull
+    @Min(1)
     private Integer idProducto;
 
     @NotBlank
+    @jakarta.validation.constraints.Size(max=100)
     private String nombre;
 
     @NotNull
@@ -25,7 +28,11 @@ public class ProductoDTO {
     private Integer stock;
 
     @NotNull
+    @jakarta.validation.constraints.DecimalMin("0.00")
+    @jakarta.validation.constraints.Digits(integer=8,fraction=2)
     private BigDecimal precio;
 
+    @NotBlank
+    @jakarta.validation.constraints.Size(max=80)
     private String categoria;
 }

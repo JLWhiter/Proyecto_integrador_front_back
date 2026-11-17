@@ -7,24 +7,24 @@ export default function Navbar({ vista, setVista }) {
   const cantidadTotalItems = carrito.reduce((acc, item) => acc + item.cantidad, 0);
 
   const opcionesCliente = [
-    { id: 'productos', texto: 'Catálogo de Compras', icono: Package },
+    { id: 'productos', texto: 'Tienda', icono: Package },
     {
       id: 'carrito',
-      texto: 'Mi Carrito',
+      texto: 'Mi carrito',
       icono: ShoppingCart,
       badge: cantidadTotalItems > 0 ? cantidadTotalItems : null
     },
-    { id: 'comprobante', texto: 'Facturas y Boletas', icono: FileCheck },
-    { id: 'historial', texto: 'Historial de Compras', icono: History }
+    { id: 'comprobante', texto: 'Comprobantes', icono: FileCheck },
+    { id: 'historial', texto: 'Mis compras', icono: History }
   ];
 
   const opcionesAdmin = [
-    { id: 'dashboard', texto: 'Dashboard & Métricas', icono: BarChart3 },
-    { id: 'comprobante', texto: 'Facturas y Boletas', icono: FileCheck },
-    { id: 'inventario', texto: 'Gestión de Productos', icono: Boxes },
-    { id: 'historial', texto: 'Historial y Ventas', icono: History },
-    { id: 'clientes', texto: 'Directorio de Clientes', icono: Users },
-    { id: 'reportes', texto: 'Reportes SUNAT', icono: FileText }
+    { id: 'dashboard', texto: 'Resumen de ventas', icono: BarChart3 },
+    { id: 'comprobante', texto: 'Comprobantes', icono: FileCheck },
+    { id: 'inventario', texto: 'Productos', icono: Boxes },
+    { id: 'historial', texto: 'Todas las ventas', icono: History },
+    { id: 'clientes', texto: 'Clientes', icono: Users },
+    { id: 'reportes', texto: 'Reportes de ventas', icono: FileText }
   ];
 
   const opciones = esAdmin ? opcionesAdmin : opcionesCliente;
@@ -38,7 +38,7 @@ export default function Navbar({ vista, setVista }) {
           className="navbarLogoImg"
         />
         <div className="navbarRolBadgeBox">
-          <span className="navbarRolBadge">{esAdmin ? 'MODO ADMINISTRADOR' : 'TIENDA & FACTURACIÓN'}</span>
+          <span className="navbarRolBadge">{esAdmin ? 'ADMINISTRACIÓN' : 'TU CUENTA TECHZONE'}</span>
         </div>
       </div>
 
@@ -70,7 +70,7 @@ export default function Navbar({ vista, setVista }) {
           <div className="usuarioNombres">
             <strong>{sesion?.nombre} {sesion?.apellido}</strong>
             <span className="usuarioRolBadge">
-              {sesion?.rol === 'ADMIN' ? 'Administrador General' : 'Cliente'}
+              {sesion?.rol === 'ADMIN' ? 'Administrador' : 'Cliente'}
             </span>
           </div>
         </div>

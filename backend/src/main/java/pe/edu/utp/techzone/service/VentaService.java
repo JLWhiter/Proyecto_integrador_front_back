@@ -10,16 +10,13 @@ import pe.edu.utp.techzone.dto.VentaDTO;
 import pe.edu.utp.techzone.entity.Cliente;
 import pe.edu.utp.techzone.entity.DetalleVenta;
 import pe.edu.utp.techzone.entity.MedioPago;
-import pe.edu.utp.techzone.entity.Persona;
 import pe.edu.utp.techzone.entity.Producto;
 import pe.edu.utp.techzone.entity.TipoDocumento;
-import pe.edu.utp.techzone.entity.Usuario;
 import pe.edu.utp.techzone.entity.Venta;
 import pe.edu.utp.techzone.exception.NotFoundException;
 import pe.edu.utp.techzone.repository.DetalleVentaRepository;
 import pe.edu.utp.techzone.repository.MedioPagoRepository;
 import pe.edu.utp.techzone.repository.TipoDocumentoRepository;
-import pe.edu.utp.techzone.repository.UsuarioRepository;
 import pe.edu.utp.techzone.repository.VentaRepository;
 
 import java.math.BigDecimal;
@@ -31,38 +28,49 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class VentaService {
-    private static final String USUARIO_VENDEDOR = "admin";
+    private final pe.edu.utp.techzone.repository.SecuenciaDocumentoRepository secuenciaRepository;
     private final VentaRepository ventaRepository;
     private final DetalleVentaRepository detalleVentaRepository;
     private final TipoDocumentoRepository tipoDocumentoRepository;
     private final MedioPagoRepository medioPagoRepository;
     private final ClienteService clienteService;
     private final ProductoService productoService;
-    private final UsuarioRepository usuarioRepository;
     private final ParametroService parametroService;
 
     @Transactional
     public VentaDTO registrar(RegistrarVentaRequest request) {
         Cliente cliente = clienteService.obtenerEntidad(request.getIdCliente());
-        Persona vendedor = usuarioRepository.findByUsuario(USUARIO_VENDEDOR)
-                .map(Usuario::getPersona)
-                .orElseThrow(() -> new NotFoundException("Usuario vendedor no encontrado"));
+        // Online checkout has no employee acting as seller.
         TipoDocumento tipoDocumento = tipoDocumentoRepository.findById(request.getTipoDocumento())
                 .orElseThrow(() -> new NotFoundException("Tipo de documento no encontrado"));
         MedioPago medioPago = medioPagoRepository.findById(request.getMedioPago())
                 .orElseThrow(() -> new NotFoundException("Medio de pago no encontrado"));
 
         String idVenta = UUID.randomUUID().toString();
-        String numeroDocumento = request.getNumeroDocumento();
-        if (numeroDocumento == null || numeroDocumento.isBlank()) {
-            String serie = "TD002".equals(request.getTipoDocumento()) ? "F001" : "B001";
-            numeroDocumento = serie + "-" + idVenta.substring(0, 8).toUpperCase();
+        String documento = request.getDocCliente();
+        boolean factura = "TD002".equals(request.getTipoDocumento());
+        if (documento == null || !documento.matches(factura ? "[0-9]{11}" : "[0-9]{8}")) {
+            throw new pe.edu.utp.techzone.exception.BusinessException("El DNI o RUC no es válido.");
         }
+        if (factura && (request.getRazonSocial() == null || request.getRazonSocial().isBlank())) {
+            throw new pe.edu.utp.techzone.exception.BusinessException("La razón social es obligatoria.");
+        }
+        String serie = factura ? "F001" : "B001";
+        var secuencia = secuenciaRepository.bloquear(serie).orElseThrow();
+        secuencia.setUltimo(secuencia.getUltimo() + 1);
+        String numeroDocumento = serie + "-" + String.format("%08d", secuencia.getUltimo());
+        BigDecimal tasa = parametroService.obtenerIgvPorcentaje();
 
         Venta venta = Venta.builder()
                 .idVenta(idVenta)
                 .cliente(cliente)
-                .persona(vendedor)
+                .persona(null)
+                .docCliente(documento)
+                .razonSocial(factura ? request.getRazonSocial().trim() : null)
+                .direccionCliente(request.getDireccionCliente())
+                .nombreCliente(request.getNombreCliente() != null && !request.getNombreCliente().isBlank()
+                        ? request.getNombreCliente().trim() : cliente.getNombre() + " " + cliente.getApellido())
+                .igvPorcentaje(tasa)
                 .tipoDocumento(tipoDocumento)
                 .numeroDocumento(numeroDocumento)
                 .medioPago(medioPago)
@@ -70,8 +78,8 @@ public class VentaService {
                 .build();
         ventaRepository.save(venta);
 
-        for (ItemVentaRequest item : request.getItems()) {
-            Producto producto = productoService.obtenerEntidad(item.getIdProducto());
+        for (ItemVentaRequest item : request.getItems().stream().sorted(java.util.Comparator.comparing(ItemVentaRequest::getIdProducto)).toList()) {
+            Producto producto = productoService.obtenerParaActualizar(item.getIdProducto());
             productoService.descontarStock(producto, item.getCantidad());
             BigDecimal precio = producto.getPrecio();
             BigDecimal subtotal = precio.multiply(BigDecimal.valueOf(item.getCantidad()));
@@ -80,6 +88,8 @@ public class VentaService {
                     .venta(venta)
                     .producto(producto)
                     .cantidad(item.getCantidad())
+                    .nombreProducto(producto.getNombre())
+                    .igv(subtotal.multiply(tasa).divide(new BigDecimal("100").add(tasa), 2, RoundingMode.HALF_UP))
                     .precioUnitario(precio)
                     .subtotal(subtotal)
                     .build();
@@ -117,7 +127,7 @@ public class VentaService {
                 .stream()
                 .map(detalle -> {
                     BigDecimal cantidad = BigDecimal.valueOf(detalle.getCantidad());
-                    BigDecimal igvLinea = parametroService.calcularIgvDeLinea(detalle.getSubtotal());
+                    BigDecimal igvLinea = detalle.getIgv();
                     // El valor de venta es el resto, asi la linea siempre cierra:
                     // valorTotal + igv == subtotal, sin centimos perdidos.
                     BigDecimal valorTotal = detalle.getSubtotal().subtract(igvLinea).setScale(2, RoundingMode.HALF_UP);
@@ -125,7 +135,7 @@ public class VentaService {
 
                     return DetalleVentaDTO.builder()
                             .idProducto(detalle.getProducto().getIdProducto())
-                            .producto(detalle.getProducto().getNombre())
+                            .producto(detalle.getNombreProducto())
                             .cantidad(detalle.getCantidad())
                             .precioUnitario(detalle.getPrecioUnitario())
                             .valorUnitario(valorUnitario)
@@ -155,7 +165,10 @@ public class VentaService {
         return VentaDTO.builder()
                 .idVenta(venta.getIdVenta())
                 .idCliente(venta.getCliente().getIdCliente())
-                .cliente(venta.getCliente().getNombre() + " " + venta.getCliente().getApellido())
+                .cliente(venta.getRazonSocial() != null ? venta.getRazonSocial() : venta.getNombreCliente())
+                .docCliente(venta.getDocCliente())
+                .razonSocial(venta.getRazonSocial())
+                .direccionCliente(venta.getDireccionCliente())
                 .tipoDocumento(venta.getTipoDocumento().getNombre())
                 .numeroDocumento(venta.getNumeroDocumento())
                 .medioPago(venta.getMedioPago().getDescripcion())
@@ -163,7 +176,7 @@ public class VentaService {
                 .total(total)
                 .opGravada(opGravada)
                 .igv(igv)
-                .igvPorcentaje(parametroService.obtenerIgvPorcentaje())
+                .igvPorcentaje(venta.getIgvPorcentaje())
                 .detalles(detalles)
                 .build();
     }

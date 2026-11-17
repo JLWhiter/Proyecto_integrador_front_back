@@ -28,7 +28,7 @@ export default function Comprobante({ venta: ventaInicial, setVista }) {
     detalles: [
       {
         idProducto: 1,
-        producto: 'POLO BASICO TALLA SMALL',
+        producto: 'ACCESORIO GAMING DE EJEMPLO',
         cantidad: 1,
         precioUnitario: 20.00,
         subtotal: 20.00
@@ -63,31 +63,20 @@ export default function Comprobante({ venta: ventaInicial, setVista }) {
     }
     const encontrada = listaVentas.find((v) => v.idVenta === idVenta);
     if (encontrada) {
-      const esFactura = (encontrada.tipoDocumento || '').toLowerCase().includes('factura');
       setVentaActual({
         ...encontrada,
-        docCliente: esFactura ? '20100100100' : '71262017',
-        direccionCliente: 'CALLE LAS NORMAS 123',
         condicionPago: 'CONTADO',
-        observaciones: 'Comprobante electrónico emitido'
+        observaciones: 'Comprobante de la venta registrada'
       });
     }
   }
 
   function alternarTipoComprobante(tipo) {
-    if (!ventaActual) return;
-    const esFactura = tipo === 'Factura';
-    const nuevaSerie = esFactura ? 'F001' : 'B002';
-    const correlativo = (ventaActual.numeroDocumento && ventaActual.numeroDocumento.includes('-'))
-      ? ventaActual.numeroDocumento.split('-')[1]
-      : '10300686';
-
-    setVentaActual({
-      ...ventaActual,
-      tipoDocumento: esFactura ? 'Factura' : 'Boleta',
-      numeroDocumento: `${nuevaSerie}-${correlativo}`,
-      docCliente: esFactura ? '20100100100' : '71262017'
-    });
+    if (!ventaActual?.idVenta?.startsWith('demo-')) return;
+    const factura = tipo === 'Factura';
+    setVentaActual({ ...ventaActual, tipoDocumento: tipo,
+      numeroDocumento: `${factura ? 'F001' : 'B002'}-10300686`,
+      docCliente: factura ? '20100100100' : '71262017' });
   }
 
   const comprobanteAMostrar = ventaActual || ventaDemo;
@@ -101,8 +90,8 @@ export default function Comprobante({ venta: ventaInicial, setVista }) {
             <ArrowLeft size={18} />
           </button>
           <div>
-            <h2>{esFactura ? 'Factura Electrónica' : 'Boleta de Venta Electrónica'}</h2>
-            <p className="subtitulo">Comprobante oficial válido según normativa SUNAT</p>
+            <h2>{esFactura ? 'Factura de venta' : 'Boleta de venta'}</h2>
+            <p className="subtitulo">Comprobante registrado en el sistema</p>
           </div>
         </div>
 
@@ -113,7 +102,7 @@ export default function Comprobante({ venta: ventaInicial, setVista }) {
             value={comprobanteAMostrar.idVenta}
             onChange={(e) => cambiarVentaSeleccionada(e.target.value)}
           >
-            <option value="demo">Demo Imagen (B002-10300686 - S/ 20.00)</option>
+            <option value="demo">Comprobante de ejemplo (S/ 20.00)</option>
             {listaVentas.map((v) => (
               <option key={v.idVenta} value={v.idVenta}>
                 {v.numeroDocumento || v.idVenta.substring(0, 8)} - {v.cliente} (S/ {Number(v.total).toFixed(2)})
@@ -126,6 +115,7 @@ export default function Comprobante({ venta: ventaInicial, setVista }) {
           <button
             type="button"
             className={`btnToggleDoc ${!esFactura ? 'activo' : ''}`}
+            disabled={!ventaActual?.idVenta?.startsWith('demo-')}
             onClick={() => alternarTipoComprobante('Boleta')}
           >
             Boleta
@@ -133,6 +123,7 @@ export default function Comprobante({ venta: ventaInicial, setVista }) {
           <button
             type="button"
             className={`btnToggleDoc ${esFactura ? 'activo' : ''}`}
+            disabled={!ventaActual?.idVenta?.startsWith('demo-')}
             onClick={() => alternarTipoComprobante('Factura')}
           >
             Factura

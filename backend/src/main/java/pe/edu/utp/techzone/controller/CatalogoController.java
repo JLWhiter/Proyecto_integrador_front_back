@@ -17,6 +17,11 @@ import java.util.List;
 public class CatalogoController {
     private final TipoDocumentoRepository tipoDocumentoRepository;
     private final MedioPagoRepository medioPagoRepository;
+    private final pe.edu.utp.techzone.service.ParametroService parametros;
+    @GetMapping("/parametros")
+    public java.util.Map<String, Object> parametros() {
+        return java.util.Map.of("igvPorcentaje", parametros.obtenerIgvPorcentaje());
+    }
 
     @GetMapping("/tipos-documento")
     public List<TipoDocumento> tiposDocumento() {

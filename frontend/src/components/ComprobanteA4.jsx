@@ -6,10 +6,10 @@ export default function ComprobanteA4({ venta }) {
   const [qrUrl, setQrUrl] = useState('');
 
   const esFactura = venta?.tipoDocumento?.toLowerCase().includes('factura');
-  const tipoTitulo = esFactura ? 'FACTURA ELECTRÓNICA' : 'BOLETA DE VENTA ELECTRÓNICA';
+  const tipoTitulo = esFactura ? 'FACTURA DE VENTA' : 'BOLETA DE VENTA';
   const tipoDocCodigo = esFactura ? '01' : '03';
 
-  // Configuración oficial de emisor TechZone
+  // Datos del emisor de demostración
   const emisor = {
     nombre: 'TECHZONE',
     razonSocial: 'TECHZONE SOLUTIONS S.A.C.',
@@ -35,7 +35,7 @@ export default function ComprobanteA4({ venta }) {
   // Cálculos tributarios SUNAT (Perú). El IGV viene de la tabla parametro.
   const fmt = (v) => Number(v ?? 0).toFixed(2);
   const totalNum = Number(venta?.total || 0);
-  const opGravadaNum = Number(venta?.opGravada ?? (totalNum / (1 + Number(venta?.igvPorcentaje || 18) / 100)));
+  const opGravadaNum = Number(venta?.opGravada ?? (totalNum / (1 + Number(venta?.igvPorcentaje ?? 18) / 100)));
   const igvNum = Number(venta?.igv ?? (totalNum - opGravadaNum));
 
   const totalStr = totalNum.toFixed(2);
@@ -46,9 +46,9 @@ export default function ComprobanteA4({ venta }) {
   const fechaVencimientoStr = fechaEmisionStr;
   const montoEnLetras = numeroALetras(totalNum);
 
-  const docCliente = venta?.docCliente || venta?.numeroDocumentoCliente || (esFactura ? '20601234567' : (venta?.idCliente?.replace(/\D/g, '') || '71262017'));
+  const docCliente = venta?.docCliente || venta?.numeroDocumentoCliente || 'No registrado';
   const nombreCliente = venta?.cliente || 'CAMILO SANCHEZ';
-  const direccionCliente = venta?.direccionCliente || 'CALLE LAS NORMAS 123, LIMA';
+  const direccionCliente = venta?.direccionCliente || 'No registrada';
   const condicionPago = venta?.condicionPago || 'CONTADO';
   const ordenCompra = venta?.ordenCompra || 'OC-2026-001';
   const guia = venta?.guiaRemision || '---';
@@ -168,7 +168,7 @@ export default function ComprobanteA4({ venta }) {
               <tr className="a4FilaItem">
                 <td className="text-center">1</td>
                 <td className="text-center">NIU</td>
-                <td className="uppercase">POLO BASICO TALLA SMALL</td>
+                <td className="uppercase">ACCESORIO GAMING DE EJEMPLO</td>
                 <td className="text-right">16.95</td>
                 <td className="text-right">3.05</td>
                 <td className="text-right">20.00</td>
@@ -188,7 +188,7 @@ export default function ComprobanteA4({ venta }) {
             <strong>{montoEnLetras}</strong>
           </div>
           <div className="a4QrContenedor">
-            {qrUrl && <img src={qrUrl} alt="Código QR SUNAT" className="a4QrImg" />}
+            {qrUrl && <img src={qrUrl} alt="Código QR del comprobante" className="a4QrImg" />}
           </div>
         </div>
 

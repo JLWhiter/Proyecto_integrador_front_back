@@ -20,17 +20,18 @@ public class DashboardService {
 
     @Transactional(readOnly = true)
     public DashboardDTO obtenerResumen() {
+        var desde = java.time.LocalDate.now().minusDays(7).atStartOfDay();
         String masVendidoMes = normalizarTexto(ventaRepository.obtenerProductoMasVendidoMes());
-        String masVendidoSemana = normalizarTexto(ventaRepository.obtenerProductoMasVendidoSemana());
+        String masVendidoSemana = normalizarTexto(ventaRepository.obtenerProductoMasVendidoSemana(desde));
 
         return DashboardDTO.builder()
-                .totalProductos(productoRepository.count())
+                .totalProductos(productoRepository.countByActivoTrue())
                 .totalClientes(clienteRepository.count())
-                .productosAgotados(productoRepository.countByStockLessThanEqual(0))
-                .stockCritico((int) productoRepository.countByStockLessThanEqual(5))
-                .ventasSemana(ventaRepository.contarVentasSemana())
+                .productosAgotados(productoRepository.countByActivoTrueAndStockLessThanEqual(0))
+                .stockCritico((int) productoRepository.countByActivoTrueAndStockLessThanEqual(5))
+                .ventasSemana(ventaRepository.contarVentasSemana(desde))
                 .clientesCompraron(ventaRepository.contarClientesCompraron())
-                .ingresosSemana(valor(ventaRepository.obtenerIngresosSemana()))
+                .ingresosSemana(valor(ventaRepository.obtenerIngresosSemana(desde)))
                 .ingresosMes(valor(ventaRepository.obtenerIngresosMes()))
                 .igvPorcentaje(parametroService.obtenerIgvPorcentaje())
                 .productoMasVendidoMes(masVendidoMes)

@@ -21,6 +21,7 @@ public class ClienteService {
     private final ClienteRepository clienteRepository;
     private final PersonaRepository personaRepository;
     private final PasswordService passwordService;
+    private final pe.edu.utp.techzone.repository.UsuarioRepository usuarios;
 
     @Transactional(readOnly = true)
     public List<ClienteDTO> listar() {
@@ -34,7 +35,7 @@ public class ClienteService {
 
     @Transactional
     public ClienteDTO registrar(ClienteDTO dto) {
-        if (clienteRepository.existsById(dto.getIdCliente())) {
+        if (clienteRepository.existsById(dto.getIdCliente()) || usuarios.findByUsuario(dto.getIdCliente()).isPresent()) {
             throw new BusinessException("El cliente ya existe");
         }
 

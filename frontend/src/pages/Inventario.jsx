@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AlertCircle, AlertTriangle, Boxes, Edit2, PackagePlus, Plus, Search, Trash2, X } from 'lucide-react';
+import { AlertCircle, Edit2, Plus, Search, Trash2, X } from 'lucide-react';
 import { productoService } from '../services/api';
 import { formatoMoneda } from '../utils/format';
 import Alerta from '../components/Alerta';
 import { obtenerImagenProducto } from '../utils/productImages';
+import { useDialogo } from '../context/DialogoContext';
 
 export default function Inventario() {
+  const { confirmar } = useDialogo();
+  const [eliminando, setEliminando] = useState(null);
   const [productos, setProductos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState('');
@@ -128,7 +131,7 @@ export default function Inventario() {
         setExito(`Producto "${payload.nombre}" actualizado correctamente.`);
       } else {
         await productoService.crear(payload);
-        setExito(`Producto "${payload.nombre}" creado exitosamente.`);
+        setExito(`Producto "${payload.nombre}" creado correctamente.`);
       }
 
       setModalAbierto(false);
@@ -141,13 +144,24 @@ export default function Inventario() {
   }
 
   async function eliminarProducto(id, nombre) {
-    if (!window.confirm(`¿Estás seguro de eliminar el producto "${nombre}"?`)) return;
+    if (eliminando !== null) return;
+    setEliminando(id);
+    setMensaje('');
+    setExito('');
     try {
+      const aceptado = await confirmar({
+        titulo: 'Eliminar producto',
+        mensaje: `¿Quieres eliminar "${nombre}" del catálogo? Su historial de ventas se conservará.`,
+        aceptar: 'Eliminar producto'
+      });
+      if (!aceptado) return;
       await productoService.eliminar(id);
       setExito(`Producto "${nombre}" eliminado.`);
       cargarProductos();
     } catch (err) {
       setMensaje(err.message || 'Error al eliminar producto.');
+    } finally {
+      setEliminando(null);
     }
   }
 
@@ -155,12 +169,12 @@ export default function Inventario() {
     <section className="inventarioSeccion">
       <div className="heroPanel no-print">
         <div>
-          <span className="miniTag">Administración de Catálogo</span>
-          <h2>Gestión de Inventario & Stock</h2>
-          <p>Controla las existencias en almacén, actualiza precios y registra nuevos artículos tecnológicos.</p>
+          <span className="miniTag">Catálogo de productos</span>
+          <h2>Inventario de productos</h2>
+          <p>Actualiza precios, revisa las existencias y administra el catálogo de la tienda.</p>
         </div>
         <button className="btnPrincipal" onClick={abrirModalNuevo}>
-          <Plus size={18} /> Nuevo Producto
+          <Plus size={18} /> Nuevo producto
         </button>
       </div>
 
@@ -184,7 +198,7 @@ export default function Inventario() {
         </div>
 
         <div className="filtroTipoTabs">
-          {categorias.slice(0, 5).map((cat) => (
+          {categorias.map((cat) => (
             <button
               key={cat}
               className={`tabFiltro ${categoria === cat ? 'activo' : ''}`}
@@ -196,102 +210,62 @@ export default function Inventario() {
         </div>
       </div>
 
-      {/* Tabla de Productos */}
+      <div className="inventarioResultados" aria-live="polite">
+        <span>{filtrados.length} productos</span>
+        <span>Precio unitario con IGV incluido</span>
+      </div>
       {cargando ? (
         <div className="panelVacio">Cargando inventario de productos...</div>
       ) : filtrados.length === 0 ? (
         <div className="panelVacio">No hay productos que coincidan con la búsqueda.</div>
       ) : (
-        <div className="tablaCard">
-          <table>
-            <thead>
-              <tr>
-                <th style={{ width: 65 }}>Foto</th>
-                <th style={{ width: '80px' }}>ID</th>
-                <th>Nombre del Producto</th>
-                <th>Categoría</th>
-                <th>Precio Unitario (Inc. IGV)</th>
-                <th>Stock Disponible</th>
-                <th>Estado</th>
-                <th className="text-center" style={{ width: '130px' }}>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtrados.map((prod) => {
-                const stockNum = Number(prod.stock || 0);
-                const agotado = stockNum <= 0;
-                const stockBajo = stockNum > 0 && stockNum <= 15;
-
-                return (
-                  <tr key={prod.idProducto} className="filaHistorial">
-                    <td>
-                      <img src={obtenerImagenProducto(prod)} alt={prod.nombre}
-                        style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 8, border: '1px solid #e2e8f0', display: 'block' }}
-                        onError={e => { e.target.src = 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=100&auto=format&fit=crop&q=80'; }} />
-                    </td>
-                    <td><strong>#{prod.idProducto}</strong></td>
-                    <td>
-                      <strong className="productoNombreTabla">{prod.nombre}</strong>
-                    </td>
-                    <td>
-                      <span className="badgeMedioPago">{prod.categoria || 'General'}</span>
-                    </td>
-                    <td>
-                      <strong>{formatoMoneda(prod.precio)}</strong>
-                    </td>
-                    <td>
-                      <strong>{stockNum} unidades</strong>
-                    </td>
-                    <td>
-                      <span style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: '4px 12px',
-                        borderRadius: '999px',
-                        fontSize: '11.5px',
-                        fontWeight: 700,
-                        lineHeight: '1.2',
-                        background: agotado ? '#fee2e2' : stockBajo ? '#fef3c7' : '#dcfce7',
-                        color: agotado ? '#b91c1c' : stockBajo ? '#b45309' : '#15803d',
-                        border: `1px solid ${agotado ? '#fca5a5' : stockBajo ? '#fde047' : '#86efac'}`,
-                        position: 'static'
-                      }}>
-                        {agotado ? 'Agotado' : stockBajo ? 'Stock Crítico' : 'Disponible'}
-                      </span>
-                    </td>
-                    <td className="text-center">
-                      <div className="flex gap-2 justify-center">
-                        <button
-                          className="btnIconoTabla btnEditar"
-                          title="Editar producto"
-                          onClick={() => abrirModalEditar(prod)}
-                        >
-                          <Edit2 size={15} />
-                        </button>
-                        <button
-                          className="btnIconoTabla btnEliminar"
-                          title="Eliminar producto"
-                          onClick={() => eliminarProducto(prod.idProducto, prod.nombre)}
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="inventarioGrid">
+          {filtrados.map((prod) => {
+            const stockNum = Number(prod.stock || 0);
+            const estado = stockNum <= 0 ? 'agotado' : stockNum <= 15 ? 'critico' : 'disponible';
+            return (
+              <article key={prod.idProducto} className="inventarioCard">
+                <div className="inventarioCardImagen">
+                  <img src={obtenerImagenProducto(prod)} alt={prod.nombre} loading="lazy"
+                    onError={(event) => {
+                      event.currentTarget.onerror = null;
+                      event.currentTarget.src = '/producto-placeholder.svg';
+                    }} />
+                  <span className={`inventarioEstado ${estado}`}>
+                    {estado === 'agotado' ? 'Agotado' : estado === 'critico' ? 'Stock bajo' : 'Disponible'}
+                  </span>
+                </div>
+                <div className="inventarioCardCuerpo">
+                  <div className="inventarioCardMeta">
+                    <span>{prod.categoria || 'General'}</span>
+                    <span>#{prod.idProducto}</span>
+                  </div>
+                  <h3>{prod.nombre}</h3>
+                  <div className="inventarioCardDatos">
+                    <div><span>Precio unitario</span><strong>{formatoMoneda(prod.precio)}</strong></div>
+                    <div><span>Stock disponible</span><strong>{stockNum} <small>unidades</small></strong></div>
+                  </div>
+                </div>
+                <div className="inventarioCardAcciones">
+                  <button type="button" className="inventarioEditar" onClick={() => abrirModalEditar(prod)} aria-label={`Editar ${prod.nombre}`}>
+                    <Edit2 size={16} /> Editar
+                  </button>
+                  <button type="button" className="inventarioEliminar" disabled={eliminando !== null} onClick={() => eliminarProducto(prod.idProducto, prod.nombre)} aria-label={`Eliminar ${prod.nombre}`}>
+                    <Trash2 size={16} /> Eliminar
+                  </button>
+                </div>
+              </article>
+            );
+          })}
         </div>
       )}
 
-      {/* Modal para Crear / Editar Producto */}
+      {/* Modal para Crear / Editar producto */}
       {modalAbierto && (
         <div className="modalOverlay" onClick={() => setModalAbierto(false)}>
           <div className="modalContenido" onClick={(e) => e.stopPropagation()}>
             <div className="modalHeader">
-              <h3>{modoEdicion ? 'Editar Producto' : 'Registrar Nuevo Producto'}</h3>
+              <h3>{modoEdicion ? 'Editar producto' : 'Registrar producto'}</h3>
               <button className="btnCerrarModal" onClick={() => setModalAbierto(false)}>
                 <X size={18} />
               </button>
@@ -299,7 +273,7 @@ export default function Inventario() {
 
             <form onSubmit={guardarProducto} className="formulario modalFormulario">
               <label>
-                Código ID Producto
+                Código del producto
                 <input
                   type="number"
                   value={form.idProducto}
@@ -310,7 +284,7 @@ export default function Inventario() {
               </label>
 
               <label>
-                Nombre del Producto
+                Nombre del producto
                 <input
                   className={erroresModal.nombre ? 'inputConError' : ''}
                   value={form.nombre}
@@ -341,7 +315,7 @@ export default function Inventario() {
                 </label>
 
                 <label>
-                  Precio (S/ inc. IGV)
+                  Precio con IGV (S/)
                   <input
                     type="number"
                     step="0.01"
@@ -360,7 +334,7 @@ export default function Inventario() {
               </div>
 
               <label>
-                Stock Inicial / Unidades en Almacén
+                Unidades disponibles
                 <input
                   type="number"
                   min="0"
@@ -388,7 +362,7 @@ export default function Inventario() {
                   className="btnPrincipal"
                   disabled={guardando}
                 >
-                  {guardando ? 'Guardando...' : modoEdicion ? 'Actualizar Producto' : 'Crear Producto'}
+                  {guardando ? 'Guardando...' : modoEdicion ? 'Guardar cambios' : 'Crear producto'}
                 </button>
               </div>
             </form>

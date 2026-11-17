@@ -22,6 +22,10 @@ public class Producto {
     @Column(name = "id_producto")
     private Integer idProducto;
 
+    @lombok.Builder.Default
+    @Column(nullable=false)
+    private boolean activo = true;
+
     @Column(nullable = false, length = 100)
     private String nombre;
 

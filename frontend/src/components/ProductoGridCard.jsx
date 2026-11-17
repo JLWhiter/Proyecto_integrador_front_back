@@ -31,14 +31,14 @@ export default function ProductoGridCard({ producto, onAgregar }) {
           }}
         />
         <span className={`stockTag ${agotado ? 'agotado' : stockBajo ? 'stockBajo' : 'disponible'}`}>
-          {agotado ? 'Agotado' : stockBajo ? `¡Últimas ${stockNum} unids!` : `${stockNum} disponibles`}
+          {agotado ? 'Agotado' : stockBajo ? `¡Últimas ${stockNum} unidades!` : `${stockNum} disponibles`}
         </span>
       </div>
 
       <div className="productoInfo">
         <span className="categoria">{producto.categoria || 'Tecnología'}</span>
         <h3 className="productoNombre" title={producto.nombre}>{producto.nombre}</h3>
-        <p className="productoDescripcion">Garantía oficial TechZone y entrega inmediata con comprobante SUNAT.</p>
+        <p className="productoDescripcion">Precio por unidad · IGV incluido</p>
 
         <div className="productoFooter">
           <strong>{formatoMoneda(producto.precio)}</strong>
@@ -50,7 +50,7 @@ export default function ProductoGridCard({ producto, onAgregar }) {
           >
             {agregado ? (
               <>
-                <Check size={16} /> ¡Agregado!
+                <Check size={16} /> Agregado
               </>
             ) : (
               <>

@@ -32,13 +32,13 @@ export default function Clientes({ setVista }) {
     <section className="clientesSeccion">
       <div className="heroPanel no-print">
         <div>
-          <span className="miniTag">Directorio de Clientes</span>
-          <h2>Clientes Registrados</h2>
-          <p>Consulta la cartera de clientes, números de contacto y cuentas activas en la plataforma.</p>
+          <span className="miniTag">Clientes</span>
+          <h2>Clientes registrados</h2>
+          <p>Encuentra los datos de contacto de los clientes de la tienda.</p>
         </div>
         <div className="badgeContadorGeneral">
           <Users size={18} />
-          <span>{clientes.length} Clientes Activos</span>
+          <span>{clientes.length} clientes registrados</span>
         </div>
       </div>
 

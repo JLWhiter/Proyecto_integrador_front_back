@@ -99,21 +99,23 @@ export default function Login() {
   return (
     <main className="loginShell">
       <section className="loginHero">
-        <div className="brandBadge">Sistema de ventas conectado a BD</div>
-        <h1>TechZone</h1>
-        <p>Login único para cliente y administrador. La interfaz cambia automáticamente según el rol detectado.</p>
+        <img className="loginMarca" src="/logo.png" alt="TechZone" />
+        <div className="brandBadge">Hardware · Periféricos · Gaming</div>
+        <h1>Equipa tu<br /><em>siguiente partida.</em></h1>
+        <p>Equipos, periféricos y accesorios para armar tu setup. Encuentra lo que necesitas y lleva el control de tus compras en un solo lugar.</p>
         <div className="loginStats">
-          <span>UX/UI moderna</span>
-          <span>Spring Boot</span>
-          <span>React</span>
+          <span>Equipos y componentes</span>
+          <span>Periféricos</span>
+          <span>Accesorios</span>
         </div>
+        <small className="loginPie">TECHZONE / EL SIGUIENTE NIVEL DE TU SETUP</small>
       </section>
 
       <section className="authCard authCardModerna">
         <div className="authHeader">
           <span className="miniTag">{modoRegistro ? 'Registro de cliente' : 'Acceso al sistema'}</span>
           <h2>{modoRegistro ? 'Crear cuenta' : 'Iniciar sesión'}</h2>
-          <p>{modoRegistro ? 'Registra un cliente y entra al catálogo.' : 'Usa admin/123456 o CLI001/123456.'}</p>
+          <p>{modoRegistro ? 'Crea tu cuenta y empieza a explorar la tienda.' : 'Accede a tus compras o administra la tienda.'}</p>
         </div>
 
         <Alerta tipo="error" mensaje={mensaje} />
@@ -127,7 +129,8 @@ export default function Login() {
                 name="usuario" 
                 value={form.usuario} 
                 onChange={cambiar} 
-                placeholder="admin o CLI001" 
+                placeholder="Tu usuario"
+                autoComplete="username"
                 className={errores.usuario ? 'inputConError' : ''}
                 required 
               />
@@ -194,7 +197,8 @@ export default function Login() {
                 name="password" 
                 value={form.password} 
                 onChange={cambiar} 
-                placeholder="123456" 
+                placeholder="Tu contraseña"
+                autoComplete={modoRegistro ? 'new-password' : 'current-password'}
                 className={errores.password ? 'inputConError' : ''}
                 required 
               />

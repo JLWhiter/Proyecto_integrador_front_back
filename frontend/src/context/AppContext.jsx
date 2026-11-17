@@ -2,14 +2,27 @@ import { createContext, useContext, useMemo, useState } from 'react';
 
 const AppContext = createContext(null);
 
+function leerStorage(clave, fallback, validar) {
+  try {
+    const guardado = localStorage.getItem(clave);
+    if (!guardado) return fallback;
+    const valor = JSON.parse(guardado);
+    return validar(valor) ? valor : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export function AppProvider({ children }) {
   const [sesion, setSesion] = useState(() => {
-    const guardado = localStorage.getItem('sesion');
-    return guardado ? JSON.parse(guardado) : null;
+    return leerStorage('sesion', null, (valor) => valor && typeof valor.id === 'string' && ['ADMIN', 'CLIENTE'].includes(valor.rol));
   });
   const [carrito, setCarrito] = useState(() => {
-    const guardado = localStorage.getItem('carrito');
-    return guardado ? JSON.parse(guardado) : [];
+    return leerStorage('carrito', [], (valor) => Array.isArray(valor) && valor.every((item) =>
+      item && Number.isInteger(item.idProducto) && typeof item.nombre === 'string'
+      && Number.isFinite(Number(item.precio)) && Number(item.precio) >= 0
+      && Number.isInteger(item.cantidad) && item.cantidad > 0
+      && Number.isFinite(Number(item.stock)) && Number(item.stock) >= item.cantidad));
   });
 
   const cliente = sesion?.rol === 'CLIENTE' ? sesion : null;

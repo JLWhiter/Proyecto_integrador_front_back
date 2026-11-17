@@ -24,6 +24,17 @@ public class Venta {
     @Id
     @Column(name = "id_venta", length = 36)
     private String idVenta;
+    @Column(name = "doc_cliente", length = 11)
+    private String docCliente;
+    @Column(name = "razon_social", length = 200)
+    private String razonSocial;
+    @Column(name = "direccion_cliente", length = 255)
+    private String direccionCliente;
+    @Column(name = "nombre_cliente", nullable = false, length = 200)
+    private String nombreCliente;
+    @Column(name = "igv_porcentaje", nullable = false, precision = 5, scale = 2)
+    private java.math.BigDecimal igvPorcentaje;
+
 
     // Comprador
     @ManyToOne(fetch = FetchType.LAZY)
@@ -32,7 +43,7 @@ public class Venta {
 
     // Vendedor / empleado que proceso la venta
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_persona", referencedColumnName = "id_persona", nullable = false)
+    @JoinColumn(name = "id_persona", referencedColumnName = "id_persona", nullable = true)
     private Persona persona;
 
     @ManyToOne(fetch = FetchType.LAZY)
