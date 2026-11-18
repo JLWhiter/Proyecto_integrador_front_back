@@ -5,60 +5,86 @@ import Productos from './pages/Productos';
 import Carrito from './pages/Carrito';
 import Historial from './pages/Historial';
 import Dashboard from './pages/Dashboard';
-import Comprobante from './pages/Comprobante';
+import Comprobante, { ModalComprobante } from './pages/Comprobante';
+import Modal from './components/Modal';
 import Reportes from './pages/Reportes';
 import Inventario from './pages/Inventario';
 import Clientes from './pages/Clientes';
 import { useApp } from './context/AppContext';
 
+const titulos = {
+  dashboard: 'Resumen de ventas', productos: 'Tienda', carrito: 'Mi carrito',
+  inventario: 'Productos', comprobante: 'Comprobantes', clientes: 'Clientes',
+  reportes: 'Reportes de ventas'
+};
+
 export default function App() {
-  const { sesion, esAdmin } = useApp();
-  const [vista, setVista] = useState('login');
+  const { sesion, esAdmin, verificandoSesion } = useApp();
+  const [modulo, setModulo] = useState(null);
   const [ventaGenerada, setVentaGenerada] = useState(null);
+  const [clienteComprobante, setClienteComprobante] = useState('');
+  const [procesandoPago, setProcesandoPago] = useState(false);
+  const inicio = esAdmin ? 'dashboard' : 'productos';
 
   useEffect(() => {
-    if (!sesion) {
-      setVista('login');
-      return;
-    }
-    setVista(esAdmin ? 'dashboard' : 'productos');
-  }, [sesion, esAdmin]);
+    setVentaGenerada(null);
+    setModulo(null);
+    setClienteComprobante('');
+    setProcesandoPago(false);
+  }, [sesion]);
 
   function cambiarVista(nuevaVista) {
-    if (!sesion) {
-      setVista('login');
-      return;
+    setVentaGenerada(null);
+    setClienteComprobante('');
+    setModulo(nuevaVista === 'login' ? null : nuevaVista);
+  }
+
+  function volverAlListado() {
+    if (modulo !== 'comprobante') {
+      setClienteComprobante(ventaGenerada?.idCliente || '');
+      setModulo('comprobante');
     }
-    setVista(nuevaVista);
+    setVentaGenerada(null);
   }
 
-  function renderVista() {
-    if (!sesion || vista === 'login') return <Login />;
+  function renderVista(vista) {
     if (vista === 'productos') return <Productos />;
-    if (vista === 'carrito') return <Carrito setVista={cambiarVista} setVentaGenerada={setVentaGenerada} />;
-    if (vista === 'historial') return <Historial setVista={cambiarVista} setVentaGenerada={setVentaGenerada} />;
-    if (vista === 'dashboard') return <Dashboard setVista={cambiarVista} setVentaGenerada={setVentaGenerada} />;
-    if (vista === 'reportes') return <Reportes setVista={cambiarVista} setVentaGenerada={setVentaGenerada} />;
+    if (vista === 'carrito') return <Carrito setVista={cambiarVista} abrirComprobante={setVentaGenerada}
+      onProcesandoPago={setProcesandoPago} />;
+    if (vista === 'historial') return <Historial abrirComprobante={setVentaGenerada} />;
+    if (vista === 'dashboard') return <Dashboard setVista={cambiarVista} />;
+    if (vista === 'reportes') return <Reportes setVista={cambiarVista} abrirComprobante={setVentaGenerada} />;
     if (vista === 'inventario') return <Inventario />;
-    if (vista === 'clientes') return <Clientes setVista={cambiarVista} />;
-    if (vista === 'comprobante') return <Comprobante venta={ventaGenerada} setVista={cambiarVista} />;
-    return esAdmin ? <Dashboard setVista={cambiarVista} setVentaGenerada={setVentaGenerada} /> : <Productos />;
+    if (vista === 'clientes') return <Clientes />;
+    if (vista === 'comprobante') return <Comprobante abrirComprobante={setVentaGenerada} clienteInicial={clienteComprobante} />;
+    return null;
   }
 
+  if (verificandoSesion) return <main className="panelVacio" role="status">Verificando sesión…</main>;
   if (!sesion) {
     return <Login />;
   }
 
   return (
-    <div className={`appLayout ${esAdmin ? 'appLayoutAdmin' : 'appLayoutTienda'}`}>
-      <Navbar vista={vista} setVista={cambiarVista} />
+    <div className={`appLayout ${esAdmin ? 'appLayoutAdmin' : 'appLayoutTienda'}${modulo ? ' appLayoutModulo' : ''}`}>
+      <Navbar vista={modulo || inicio} setVista={cambiarVista} />
       <main className="contenido">
         <header className="barraContexto">
           <span><i aria-hidden="true" />{esAdmin ? 'Administración de la tienda' : 'Hardware y gaming'}</span>
           <span>Hola, <strong>{sesion?.nombre}</strong></span>
         </header>
-        {renderVista()}
+        {modulo !== inicio && renderVista(inicio)}
       </main>
+      {modulo && (
+        <Modal key={modulo} titulo={modulo === 'historial' ? (esAdmin ? 'Todas las ventas' : 'Mis compras') : titulos[modulo]}
+          className="modalModulo" onCerrar={() => cambiarVista(null)} bloqueado={modulo === 'carrito' && procesandoPago}>
+          {renderVista(modulo)}
+        </Modal>
+      )}
+      {ventaGenerada && (esAdmin || ventaGenerada.idCliente === sesion.id) && (
+        <ModalComprobante key={ventaGenerada.idVenta} venta={ventaGenerada}
+          onCerrar={() => setVentaGenerada(null)} volverAlListado={volverAlListado} />
+      )}
     </div>
   );
 }

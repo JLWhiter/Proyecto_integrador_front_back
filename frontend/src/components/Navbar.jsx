@@ -1,8 +1,10 @@
-import { BarChart3, Boxes, FileCheck, FileText, History, LogOut, Package, ShoppingCart, UserRound, Users } from 'lucide-react';
+import { useState } from 'react';
+import { BarChart3, Boxes, FileCheck, FileText, History, LogOut, Menu, Package, ShoppingCart, UserRound, Users, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export default function Navbar({ vista, setVista }) {
   const { sesion, esAdmin, carrito, cerrarSesion } = useApp();
+  const [menuAbierto, setMenuAbierto] = useState(false);
 
   const cantidadTotalItems = carrito.reduce((acc, item) => acc + item.cantidad, 0);
 
@@ -30,7 +32,7 @@ export default function Navbar({ vista, setVista }) {
   const opciones = esAdmin ? opcionesAdmin : opcionesCliente;
 
   return (
-    <aside className="sidebar no-print">
+    <aside className={`sidebar no-print ${menuAbierto ? 'sidebarMenuAbierto' : ''}`}>
       <div className="logoHeaderContainer">
         <img
           src="/logo.png"
@@ -42,7 +44,12 @@ export default function Navbar({ vista, setVista }) {
         </div>
       </div>
 
-      <nav className="menu">
+      <button type="button" className="menuMovilToggle" aria-expanded={menuAbierto}
+        aria-controls="navegacion-principal acciones-usuario" onClick={() => setMenuAbierto(!menuAbierto)}>
+        {menuAbierto ? <X size={19} /> : <Menu size={19} />} Menú
+      </button>
+
+      <nav id="navegacion-principal" className="menu" aria-label="Navegación principal">
         {opciones.map((opcion) => {
           const Icono = opcion.icono;
           const esActivo = vista === opcion.id;
@@ -50,7 +57,11 @@ export default function Navbar({ vista, setVista }) {
             <button
               key={opcion.id}
               className={`menuBoton ${esActivo ? 'activo' : ''}`}
-              onClick={() => setVista(opcion.id)}
+              aria-current={esActivo ? 'page' : undefined}
+              onClick={() => {
+                setMenuAbierto(false);
+                setVista(opcion.id);
+              }}
             >
               <Icono size={19} />
               <span className="menuTexto">{opcion.texto}</span>
@@ -62,7 +73,7 @@ export default function Navbar({ vista, setVista }) {
         })}
       </nav>
 
-      <div className="usuarioBox">
+      <div id="acciones-usuario" className="usuarioBox">
         <div className="usuarioInfoFila">
           <div className="usuarioAvatar">
             <UserRound size={18} />

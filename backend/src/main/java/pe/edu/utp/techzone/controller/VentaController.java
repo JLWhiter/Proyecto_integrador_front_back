@@ -1,6 +1,7 @@
 package pe.edu.utp.techzone.controller;
 
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pe.edu.utp.techzone.dto.RegistrarVentaRequest;
+import pe.edu.utp.techzone.config.SesionApi;
 import pe.edu.utp.techzone.dto.VentaDTO;
 import pe.edu.utp.techzone.service.VentaService;
 
@@ -21,13 +23,16 @@ public class VentaController {
     private final VentaService ventaService;
 
     @PostMapping
-    public VentaDTO registrar(@Valid @RequestBody RegistrarVentaRequest request) {
+    public VentaDTO registrar(@Valid @RequestBody RegistrarVentaRequest request, HttpServletRequest http) {
+        SesionApi.exigirCliente(http, request.getIdCliente());
         return ventaService.registrar(request);
     }
 
     @GetMapping("/{idVenta}")
-    public VentaDTO buscar(@PathVariable String idVenta) {
-        return ventaService.buscar(idVenta);
+    public VentaDTO buscar(@PathVariable String idVenta, HttpServletRequest http) {
+        var venta = ventaService.buscar(idVenta);
+        SesionApi.exigirCliente(http, venta.getIdCliente());
+        return venta;
     }
 
     @GetMapping
@@ -36,7 +41,8 @@ public class VentaController {
     }
 
     @GetMapping("/cliente/{idCliente}")
-    public List<VentaDTO> historialCliente(@PathVariable String idCliente) {
+    public List<VentaDTO> historialCliente(@PathVariable String idCliente, HttpServletRequest http) {
+        SesionApi.exigirCliente(http, idCliente);
         return ventaService.historialCliente(idCliente);
     }
 }

@@ -2,6 +2,9 @@ package pe.edu.utp.techzone.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,6 +32,15 @@ public class ProductoController {
     @GetMapping("/{id}")
     public ProductoDTO buscar(@PathVariable Integer id) {
         return productoService.buscar(id);
+    }
+
+    @GetMapping("/{id}/imagen")
+    public ResponseEntity<byte[]> obtenerImagen(@PathVariable Integer id) {
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("image/webp"))
+                .cacheControl(CacheControl.noStore())
+                .header("X-Content-Type-Options", "nosniff")
+                .body(productoService.obtenerImagen(id));
     }
 
     @PostMapping

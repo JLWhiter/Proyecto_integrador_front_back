@@ -19,7 +19,10 @@
   button:focus-visible, a:focus-visible { outline: 3px solid #2eb4bf; outline-offset: 3px; }
   button:disabled { cursor: not-allowed; }
   h1, h2, h3 { font-weight: 650; }
-  .appLayout { grid-template-columns: 260px minmax(0, 1fr); }
+  .appLayout { --anchoSidebar: 260px; grid-template-columns: var(--anchoSidebar) minmax(0, 1fr); }
+  .appLayoutModulo { background: var(--bg); }
+  .appLayoutModulo > .contenido { visibility: hidden; opacity: 0; }
+  .appLayoutModulo > .sidebar { filter: brightness(0.85); }
   .contenido { min-width: 0; padding: 24px 36px 40px; }
   .sidebar { background: #10151b; padding: 24px 18px; gap: 24px; height: 100vh; position: sticky; box-shadow: none; border-right: 1px solid #252d36; }
   .logoHeaderContainer { padding-bottom: 22px; gap: 14px; border-color: #29313a; }
@@ -30,6 +33,7 @@
   .sidebar .menuBoton:hover { background: #1b232c; transform: none; color: #f2f6f8; }
   .sidebar .menuBoton.activo { background: #113139; color: #67e2e9; box-shadow: inset 3px 0 #38cbd5; }
   .sidebar .menuBoton svg { width: 18px; height: 18px; }
+  .menuMovilToggle { display: none; }
   .badgeContador { background: #43d4df; color: #09262a; }
   .usuarioBox { border-radius: 8px; border-color: #2b343e; background: #171f28; padding: 14px; }
   .usuarioAvatar { background: #233944; color: #64dce4; border-radius: 8px; }
@@ -108,7 +112,7 @@
   .textAzul { color: #007a84; }
   .rankingItem { border-radius: 6px; background: #fafcfc; }
 
-  /* A darker storefront gives the catalog its own identity without changing the admin workspace. */
+  /* Storefront surfaces */
   .appLayoutTienda { --bg: #11161c; --panel: #1a222b; --text: #f0f4f7; --muted: #a0aebb; --line: #303b47; --primary: #4ed7df; --primaryDark: #77e5eb; background: var(--bg); color: var(--text); }
   .appLayoutTienda .barraContexto { border-bottom: 1px solid var(--line); margin-bottom: 26px; }
   .appLayoutTienda .heroPanel { color: var(--text); }
@@ -142,9 +146,61 @@
   .appLayoutTienda .resumenCard > p { font-size: 11px; line-height: 1.6; color: var(--muted); margin: 0; }
   .appLayoutTienda .resumenPagoModerno { top: 16px; }
   .appLayoutTienda .comprobanteControlBar, .appLayoutTienda .comprobanteSelectorWrapper { background: var(--panel); border-color: var(--line); color: var(--text); }
-  .appLayoutTienda .comprobanteTituloInfo h2 { color: var(--text); }
-  .appLayoutTienda .btnSelectorFormato, .appLayoutTienda .btnToggleDoc { background: #25333f; color: #b4c4d1; border-color: #3a4b59; }
-  .appLayoutTienda .btnSelectorFormato.activo, .appLayoutTienda .btnToggleDoc.activo { background: #28515a; color: #a2f3f7; }
+  .comprobantesPaneles { display: grid; gap: 18px; align-items: start; max-width: 1280px; }
+  .comprobantesPanelesAdmin { grid-template-columns: minmax(245px, 0.8fr) minmax(0, 2fr); }
+  .comprobantesPanel { min-width: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+  .comprobantesPanelCabecera { padding: 18px 20px; border-bottom: 1px solid var(--line); }
+  .comprobantesPanelCabecera h3 { margin: 0; font-size: 17px; }
+  .comprobantesPanelCabecera p { margin: 6px 0 0; color: var(--muted); overflow-wrap: anywhere; }
+  .comprobantesPanelCabecera label { margin: 14px 0 6px; }
+  .comprobantesPanelCabecera .inputIcono { border-radius: 8px; }
+  .comprobantesPanelCabecera .inputIcono svg { flex-shrink: 0; }
+  .comprobantesPanel input, .comprobantesPanel select { min-width: 0; }
+  .comprobantesClientes, .comprobantesLista { padding: 0; margin: 0; list-style: none; }
+  .comprobantesClientes { max-height: min(52vh, 460px); overflow-y: auto; }
+  .comprobantesClientes li + li, .comprobantesLista li + li { border-top: 1px solid var(--line); }
+  .comprobantesClientes button {
+    width: 100%;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    min-height: 58px;
+    padding: 10px 18px;
+    border: 0;
+    color: var(--text);
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+  .comprobantesClientes button:hover { background: #f1f7f7; }
+  .comprobantesClientes button[aria-pressed="true"] { background: #e5f5f5; box-shadow: inset 3px 0 var(--primary); }
+  .comprobantesClientes button:focus-visible { outline-offset: -3px; }
+  .comprobantesClientes small, .comprobantesLista li span { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; }
+  .comprobantesSinCliente { display: grid; justify-items: center; align-content: center; gap: 8px; min-height: 225px; padding: 20px; text-align: center; }
+  .comprobantesSinCliente svg, .comprobantesDocumentoIcono { color: var(--primary); }
+  .comprobantesSinCliente p, .comprobantesEstado { color: var(--muted); margin: 0; }
+  .comprobantesEstado { padding: 20px; }
+  .comprobantesFiltros {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .comprobantesLista li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    overflow-wrap: anywhere;
+  }
+  .comprobantesImporte { white-space: nowrap; }
+  .comprobantesLista li button { min-height: 42px; }
+  .appLayoutTienda .btnSelectorFormato { background: #25333f; color: #b4c4d1; border-color: #3a4b59; }
+  .appLayoutTienda .btnSelectorFormato.activo { background: #28515a; color: #a2f3f7; }
   .appLayoutTienda .btnIcono { background: #4b252c; color: #ff9a9f; }
 
   /* Dialogs use the same measured spacing and retain clear destructive actions. */
@@ -155,64 +211,309 @@
   .dialogoSistema h2 { font-size: 21px; font-weight: 650; }
   .dialogoSistema p { font-size: 13px; }
   .dialogoConfirmar { border-radius: 6px; font-size: 13px; font-weight: 600; background: #c93737; }
-  .modalContenido { border-radius: 12px; box-shadow: 0 18px 60px rgba(0, 0, 0, 0.2); }
-  .modalOverlay { background: rgba(5, 12, 19, 0.65); backdrop-filter: blur(3px); }
-  .modalHeader h3 { font-size: 20px; font-weight: 650; }
+  html:has(dialog[open]) { overflow: hidden; }
+  .modalVentana {
+    width: min(520px, calc(100% - 24px));
+    max-width: none;
+    max-height: calc(100dvh - 24px);
+    margin: auto;
+    padding: 0;
+    overflow: hidden;
+    color: var(--text);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: 0 20px 58px #070d2060;
+  }
+  .modalVentana[open] { display: flex; flex-direction: column; }
+  .modalVentana::backdrop { background: #080e1b99; }
+  .modalModulo {
+    --margenModulo: clamp(16px, 2vw, 36px);
+    inset: var(--margenModulo) 0 auto var(--anchoSidebar);
+    margin: 0 auto;
+    width: min(1380px, calc(100% - var(--anchoSidebar) - 2 * var(--margenModulo)));
+    max-height: calc(100dvh - 2 * var(--margenModulo));
+    box-shadow: 0 12px 32px #11182714;
+  }
+  .modalModulo::backdrop { background: transparent; }
+  .modalModulo > .modalVentanaCabecera h2 { font-size: 21px; }
+  .modalComprobante { width: min(920px, calc(100% - 24px)); }
+  .modalVentanaCabecera {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex: none;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .modalVentanaCabecera h2 { margin: 0; font-size: 18px; overflow-wrap: anywhere; }
+  .modalVentanaCabecera .btnCerrarModal {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 6px;
+    color: var(--text);
+  }
+  .modalVentanaCabecera .btnCerrarModal:hover { background: var(--bg); }
+  .modalVentanaCuerpo { min-height: 0; min-width: 0; overflow: auto; overscroll-behavior: contain; padding: 20px; }
+  .modalComprobante .comprobantePrevisualizacion { padding-bottom: 0; }
+  .modalComprobante .comprobanteControlBar { margin-bottom: 16px; }
+  .modalRegistro { --panel: #141423; --text: #faf7ff; --line: #51446d; }
 
-  .loginShell { grid-template-columns: minmax(0, 1fr) minmax(360px, 440px); gap: clamp(40px, 8vw, 140px); padding: 60px clamp(28px, 7vw, 110px); background: #10161d; }
-  .loginHero { max-width: 640px; align-self: stretch; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; }
-  .loginMarca { width: 240px; max-width: 100%; height: auto; margin-bottom: 48px; }
-  .loginHero .brandBadge { color: #92a5b5; background: transparent; padding: 0; border: 0; font-size: 10px; letter-spacing: 1.5px; }
-  .loginHero h1 { color: #edf3f7; font-size: clamp(42px, 5.3vw, 78px); font-weight: 600; line-height: 1.08; letter-spacing: -2.5px; margin: 24px 0; }
-  .loginHero h1 em { font-style: normal; color: #5cdce4; }
-  .loginHero > p { color: #a1b1bf; max-width: 470px; font-size: 15px; line-height: 1.8; }
-  .loginStats { width: 100%; gap: 24px; margin-top: 32px; padding-top: 22px; border-top: 1px solid #2b3641; }
-  .loginStats span { padding: 0; border: 0; border-radius: 0; background: none; color: #a1b1bf; font-size: 11px; }
-  .loginStats span::before { content: ''; display: inline-block; width: 4px; height: 4px; background: #47cbd5; margin-right: 8px; vertical-align: middle; }
-  .loginPie { color: #667d8f; font-size: 9px; letter-spacing: 1.7px; margin-top: 52px; }
-  .authCard { padding: 32px; border-radius: 12px; background: #ffffff; color: #17212b; border: 1px solid #dce2e6; }
+  .loginShell {
+    min-height: 100svh;
+    grid-template-columns: minmax(0, 3fr) minmax(340px, 2fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    align-items: stretch;
+    gap: 0;
+    padding: 0;
+    background: #0d0d18;
+  }
+  .loginHero {
+    position: relative;
+    isolation: isolate;
+    min-height: 525px;
+    max-width: none;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    overflow: hidden;
+    padding: clamp(28px, 5vw, 96px);
+    background: #16112b;
+  }
+  .loginArte, .loginHero::after { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .loginArte { object-fit: cover; object-position: center 14%; z-index: -2; }
+  .loginHero::after { content: ''; z-index: -1; background: linear-gradient(0deg, #090716 0%, #090716d9 18%, #09071600 56%); }
+  .loginMarca { display: block; width: clamp(136px, 15vw, 183px); max-width: 100%; height: auto; margin-bottom: clamp(20px, 3vw, 34px); }
+  .loginHero h1 { color: #fff; margin: 0 0 10px; font-size: clamp(34px, 4.6vw, 72px); font-weight: 800; line-height: 1.03; letter-spacing: -0.045em; }
+  .loginHero h1 em { display: block; font-style: normal; color: #83eff8; }
+  .loginHero .loginHeroTexto p { color: #e1ddef; margin: 0; font-size: 14px; line-height: 1.5; }
+  .loginShell .authCard {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: clamp(30px, 4vw, 64px) clamp(26px, 5vw, 84px);
+    border: 0;
+    border-left: 1px solid #51446d;
+    border-radius: 0;
+    box-shadow: none;
+    background: radial-gradient(ellipse at 100% 0%, #27203a, #151522 65%);
+    color: #faf7ff;
+  }
+  .loginAcceso { width: min(100%, 460px); min-width: 0; }
+  .loginCategorias {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid #51446d;
+    background: #372c4d;
+  }
+  .loginCategorias li {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    min-width: 0;
+    padding: clamp(18px, 2.3vw, 34px) 16px;
+    background: #171625;
+    color: #faf7ff;
+  }
+  .loginCategorias svg {
+    width: 42px;
+    height: 42px;
+    padding: 10px;
+    flex-shrink: 0;
+    border: 1px solid #4e476b;
+    border-radius: 10px;
+    background: #252039;
+    color: #85f0f5;
+  }
+  .loginCategorias strong, .loginCategorias span { display: block; }
+  .loginCategorias span { margin-top: 4px; color: #c7bed9; font-size: 12px; line-height: 1.4; }
+  .loginShell .authHeader p { color: #c7bed9; }
+  .loginShell .authHeader h2 { font-size: clamp(26px, 3vw, 38px); color: #faf7ff; }
+  .loginShell label { color: #f2eafb; }
+  .loginShell input, .loginShell .inputIcono { color: #f2eafb; background: #0d0d19; border-color: #5b5071; }
+  .loginShell .inputIcono { border-radius: 8px; }
+  .loginShell .inputIcono svg { flex-shrink: 0; color: #b8a6f2; }
+  .loginShell .inputIcono:focus-within { border-color: #83eff8; box-shadow: 0 0 0 2px #83eff82b; }
+  .loginShell .btnPrincipal { background: #85f0f5; color: #0d1726; font-weight: 750; }
+  .loginShell .btnPrincipal:hover { background: #bbfaff; }
+  .loginShell .btnLink { align-self: flex-start; min-height: 44px; color: #d2baff; padding: 8px 0; text-align: left; }
+  .loginShell .mensajeErrorCampo { color: #ffadb9; }
   .authHeader { margin-bottom: 24px; }
   .authHeader h2 { font-size: 26px; font-weight: 650; margin: 12px 0 10px; letter-spacing: -0.6px; }
   .authHeader p { font-size: 12px; line-height: 1.6; }
   .authCard .formulario { gap: 18px; }
   .authCard .btnLink { margin-top: 24px; }
 
+  .appLayoutAdmin, body:has(.appLayoutAdmin) .dialogoSistema {
+    --bg: #10121f;
+    --panel: #1a1e30;
+    --nivelElevado: #23283d;
+    --text: #f0f3fc;
+    --muted: #aeb8cc;
+    --line: #363e59;
+    --primary: #79e8ef;
+    --primaryDark: #aaf5f7;
+    --violeta: #c9b6ff;
+    --danger: #ff9cab;
+    --success: #8de7b8;
+    --shadow: 0 8px 24px #070a182e;
+    color: var(--text);
+  }
+  .appLayoutAdmin { background: radial-gradient(ellipse at 84% 0%, #211c36, var(--bg) 60%); }
+  .appLayoutAdmin .sidebar { background: #121522; border-color: var(--line); }
+  .appLayoutAdmin .sidebar .menuBoton.activo { background: #242640; color: #a3f4f7; }
+  .appLayoutAdmin .modalVentanaCabecera {
+    background: linear-gradient(105deg, #24253d, #26213a 75%, #312345);
+    border-bottom-color: #4a4464;
+  }
+  .appLayoutAdmin .modalVentanaCabecera .btnCerrarModal:hover { background: #393250; }
+  .appLayoutAdmin .modalModulo { box-shadow: 0 18px 50px #080b19a0; }
+  .appLayoutAdmin :is(input, select, .inputIcono) { background: #14182a; color: var(--text); border-color: var(--line); color-scheme: dark; }
+  .appLayoutAdmin input::placeholder { color: #a0acc6; }
+  .appLayoutAdmin .btnSecundario, body:has(.appLayoutAdmin) .dialogoSistema .btnSecundario { background: #292e46; color: var(--text); }
+  .appLayoutAdmin .btnSecundario:hover, body:has(.appLayoutAdmin) .dialogoSistema .btnSecundario:hover { background: #373d5b; border-color: #667294; }
+  .appLayoutAdmin :is(.btnPrincipal, .tablaCard table button), body:has(.appLayoutAdmin) .dialogoSistema .btnPrincipal { color: #102531; }
+  .appLayoutAdmin :is(.btnPrincipal, .tablaCard table button):disabled { background: #353c53; color: var(--muted); }
+  .appLayoutAdmin :is(.tablaCard th, .sunatItem, .rankingItem, .inventarioCardAcciones) { background: #22273e; border-color: var(--line); }
+  .appLayoutAdmin :is(.tablaCard th, .sunatItem span, .panelTributarioHeader p, .textMuted, .clienteDatoItem) { color: var(--muted); }
+  .appLayoutAdmin :is(.sunatItem strong, .clienteInfo h3) { color: var(--text); }
+  .appLayoutAdmin .textAzul { color: var(--primary); }
+  .appLayoutAdmin .textVerde { color: var(--success); }
+  .appLayoutAdmin .panelTributarioSunat { background: var(--panel); }
+  .appLayoutAdmin .panelTributarioHeader { border-color: var(--line); }
+  .appLayoutAdmin :is(.dashboardIcono, .iconoSunatBadge, .rankingItem > span) { background: #273a50; color: var(--primary); }
+  .appLayoutAdmin .alertaStock { background: #392e23; color: #f5d598; border-color: #574733; }
+  .appLayoutAdmin .okStock { background: #1d362e; color: var(--success); border-color: #315044; }
+  .appLayoutAdmin .inventarioCardImagen { background: #30364e; }
+  .appLayoutAdmin .inventarioEditar { color: var(--primary); border-color: #38616f !important; }
+  .appLayoutAdmin .inventarioEditar:hover { background: #253d4c; }
+  .appLayoutAdmin .inventarioEliminar { color: var(--danger); border-color: #644351 !important; }
+  .appLayoutAdmin .inventarioEliminar:hover { background: #432b3b; }
+  .appLayoutAdmin :is(.tabFiltro, .btnLimpiarSearch) { color: var(--muted); }
+  .appLayoutAdmin :is(.tabFiltro:hover, .btnLimpiarSearch:hover) { background: var(--nivelElevado); color: var(--text); border-color: var(--line); }
+  .appLayoutAdmin .inventarioSeccion .tabFiltro.activo { background: #274354; color: var(--primary); border-color: #4b7487; }
+  .appLayoutAdmin .fotoProductoVistaPrevia { background: #262c43; }
+  .appLayoutAdmin .mensajeErrorCampo { color: var(--danger); }
+  .appLayoutAdmin .comprobantesClientes button:hover { background: #263047; }
+  .appLayoutAdmin .comprobantesClientes button[aria-pressed="true"] { background: #263d50; }
+  .appLayoutAdmin :is(.comprobanteControlBar, .comprobanteSelector) { background: var(--nivelElevado); border-color: var(--line); }
+  .appLayoutAdmin .btnSelectorFormato { color: var(--muted); }
+  .appLayoutAdmin .btnSelectorFormato.activo { background: #304b60; color: var(--primary); }
+  body:has(.appLayoutAdmin) .dialogoSistema { background: var(--panel); border-color: var(--line); }
+  body:has(.appLayoutAdmin) .dialogoSistema .dialogoCerrar:hover { background: var(--nivelElevado); }
+
+  .clientesSeccion .heroPanel {
+    background: linear-gradient(112deg, #252f49, #32254b);
+    border: 1px solid #4c4269;
+    border-radius: 10px;
+    padding: clamp(16px, 2.2vw, 30px);
+    margin-bottom: 18px;
+  }
+  .clientesSeccion .heroPanel h2 { margin-top: 0; }
+  .clientesSeccion .filtrosAvanzadosBar { margin-bottom: 16px; }
+  .clientesSeccion input[type="search"]::-webkit-search-cancel-button { display: none; }
+  .clientesSeccion .badgeContadorGeneral { background: #453561; color: #e2d6ff; }
+  .clientesGrid { gap: 16px; }
+  .clientesGrid .clienteCard { --tonoCliente: #80e6ef; background: linear-gradient(145deg, #252d46, #1f2438 72%); }
+  .clientesGrid .clienteCard:nth-child(3n + 2) { --tonoCliente: var(--violeta); }
+  .clientesGrid .clienteCard:nth-child(3n) { --tonoCliente: #9fdfbd; }
+  .clientesGrid .clienteCard:hover { border-color: #636c90; transform: none; }
+  .clienteCard .clienteAvatar {
+    background: color-mix(in srgb, var(--tonoCliente), #24273c 80%);
+    color: var(--tonoCliente);
+    border: 1px solid color-mix(in srgb, var(--tonoCliente), #24273c 65%);
+    font-size: 14px;
+    font-weight: 750;
+  }
+  .clienteCard .clienteIdTag { background: #323852; color: var(--tonoCliente); }
+  .clienteCard .clienteDatoItem { white-space: normal; overflow-wrap: anywhere; }
+  .clienteCard .clienteDatoItem svg { flex-shrink: 0; }
+
   @media (max-width: 1200px) {
-    .appLayout { grid-template-columns: 230px minmax(0, 1fr); }
+    .appLayout { --anchoSidebar: 230px; }
     .contenido { padding: 24px; }
     .dashboardGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .carritoLayout { grid-template-columns: minmax(0, 1fr) 330px; }
   }
+  @media (max-width: 1100px) {
+    .a4Header { flex-wrap: wrap; gap: 12px; }
+    .a4LogoBox { max-width: 100%; }
+    .a4LogoBox img { max-width: 100%; height: auto; }
+    .a4EmpresaInfo { flex-basis: 140px; }
+  }
   @media (max-width: 1000px) {
-    .appLayout { grid-template-columns: minmax(0, 1fr); }
+    .appLayout { --anchoSidebar: 0px; grid-template-columns: minmax(0, 1fr); }
     .sidebar { height: auto; position: static; flex-direction: row; align-items: center; flex-wrap: wrap; gap: 16px; padding: 14px 22px; }
     .logoHeaderContainer { width: 170px; flex-shrink: 0; padding: 0; border: 0; gap: 6px; }
     .navbarLogoImg { max-width: 170px; }
     .navbarRolBadge { font-size: 8px; }
-    .sidebar .menu { flex: 1; min-width: 0; flex-direction: row; overflow: auto; }
-    .sidebar .menuBoton { width: auto; min-width: max-content; padding: 10px; }
+    .sidebar .menu { flex: 1; min-width: 0; flex-direction: row; flex-wrap: wrap; }
+    .sidebar .menuBoton { width: auto; min-height: 44px; padding: 10px; }
     .sidebar .menuBoton.activo { box-shadow: inset 0 -2px #38cbd5; }
     .sidebar .usuarioBox { display: flex; width: 100%; flex-direction: row; justify-content: space-between; align-items: center; padding: 8px 12px; }
     .carritoLayout { grid-template-columns: minmax(0, 1fr); }
     .resumenPagoModerno { position: static; }
-    .loginShell { grid-template-columns: minmax(0, 1fr) minmax(320px, 400px); gap: 32px; padding: 40px 28px; }
-    .loginHero h1 { font-size: 48px; }
+    .loginShell { grid-template-columns: minmax(0, 1fr) minmax(310px, 0.9fr); }
   }
   @media (max-width: 700px) {
-    .sidebar { gap: 14px; padding: 16px; }
+    .modalVentana { max-height: calc(100dvh - 16px); }
+    .modalModulo { --margenModulo: 8px; }
+    .modalModulo > .modalVentanaCabecera h2 { font-size: 18px; }
+    .modalVentanaCabecera, .modalVentanaCuerpo { padding-inline: 12px; }
+    .comprobantesPanelesAdmin { grid-template-columns: minmax(0, 1fr); }
+    .comprobantesClientes { max-height: 235px; }
+    .comprobantesSinCliente { min-height: 140px; }
+    .sidebar { gap: 12px; padding: 12px 16px; justify-content: space-between; }
     .sidebar .logoHeaderContainer { width: 150px; }
-    .sidebar .usuarioBox { width: auto; flex: 1; justify-content: flex-end; padding: 0; border: 0; background: none; }
+    .menuMovilToggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 0 12px;
+      color: #f2f6f8;
+      background: #1b232c;
+      border: 1px solid #35414d;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .sidebar .usuarioBox { display: none; justify-content: flex-end; padding: 0; border: 0; background: none; }
     .sidebar .usuarioInfoFila { display: none; }
-    .sidebar .menu { flex-basis: 100%; order: 3; }
-    .loginShell { grid-template-columns: minmax(0, 1fr); padding: 28px 20px; gap: 32px; }
-    .loginHero { padding: 0 4px; }
-    .loginMarca { width: 190px; margin-bottom: 24px; }
-    .loginHero h1 { font-size: 44px; }
-    .loginHero > p { font-size: 13px; }
-    .loginStats, .loginPie { display: none; }
-    .authCard { width: 100%; max-width: none; padding: 26px; }
+    .sidebar .menu { display: none; width: 100%; }
+    .sidebarMenuAbierto .menu { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); flex: 0 0 100%; }
+    .sidebarMenuAbierto .usuarioBox { display: flex; }
+    .sidebar .menuBoton svg { flex-shrink: 0; }
+    .sidebar .menuTexto { white-space: normal; }
+    .loginShell { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; align-content: start; }
+    .loginHero { min-height: clamp(190px, 49vw, 285px); padding: 16px 20px; }
+    .loginArte { object-position: center 21%; }
+    .loginMarca { width: 125px; margin-bottom: 12px; }
+    .loginHero h1 { font-size: clamp(26px, 6vw, 38px); margin-bottom: 5px; }
+    .loginHero .loginHeroTexto p { font-size: 12px; }
+    .loginShell .authCard { border-left: 0; border-top: 1px solid #51446d; padding: 20px; }
+    .loginCategorias { grid-template-columns: minmax(0, 1fr); }
+    .loginCategorias li { justify-content: flex-start; padding: 14px 20px; }
+    .loginShell .authHeader { margin-bottom: 18px; }
+    .loginShell .authHeader h2 { margin-top: 0; }
+    .loginShell .authCard .formulario { gap: 12px; }
+    .loginShell .authCard .btnLink { margin-top: 12px; }
     .contenido { padding: 20px 16px 32px; }
-    .barraContexto { padding-bottom: 20px; font-size: 10px; }
+    .barraContexto { flex-wrap: wrap; overflow-wrap: anywhere; padding-bottom: 20px; font-size: 10px; }
     .heroPanel { flex-direction: column; align-items: flex-start; gap: 16px; }
     .heroPanel h2, .pageHeader h2 { font-size: 26px; }
     .heroPanel > .flex { flex-wrap: wrap; }
@@ -226,7 +527,22 @@
     .dialogoSistema { padding: 24px; }
     .dialogoAcciones { gap: 8px; }
     .dialogoAcciones > button { flex: 1; }
-    .comprobanteControlBar { flex-wrap: wrap; }
+    .clientesGrid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
+    .comprobanteControlBar { padding: 16px; }
+    .comprobanteAcciones { flex-wrap: wrap; }
+    .a4ComprobanteWrapper { padding: 18px; overflow-wrap: anywhere; }
+    .a4RucBox { min-width: 0; width: 100%; }
+    .a4PieDoc { flex-wrap: wrap; gap: 16px; }
+    .a4PieDerecha { max-width: 100%; }
+    .a4TablaProductosWrapper, .a4TablaCondiciones { overflow-x: auto; }
+    .a4TablaProductos { min-width: 420px; }
+    .a4TablaCondiciones table { min-width: 380px; }
+    .a4TablaProductosWrapper { min-height: 0; }
+    .a4FilaEspacio { display: none; }
+    .ticketWrapper { max-width: 100%; overflow-wrap: anywhere; }
+    .ticketLogoImg { max-width: 100%; height: auto; }
+    .tablaHeader, .modalAcciones { flex-wrap: wrap; }
+    .authCard input, .formulario input, .formulario select { min-width: 0; }
     .carritoLayout table, .carritoLayout table tbody { display: block; }
     .carritoLayout table thead { display: none; }
     .carritoLayout table tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; padding: 16px; gap: 12px; border-bottom: 1px solid var(--line); }
@@ -236,7 +552,45 @@
     .carritoLayout table td[data-label]::before { content: attr(data-label); color: var(--muted); font-size: 11px; }
     .carritoLayout table td:last-child { justify-content: flex-end; grid-column: 2; }
   }
+  @media (max-width: 400px) {
+    .comprobantesLista li { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding-inline: 14px; }
+    .comprobantesDocumentoIcono { display: none; }
+    .comprobantesImporte { grid-column: 1; }
+    .comprobantesLista li button { grid-column: 2; grid-row: 1 / span 2; }
+    .registroGrid, .gridDosCampos { grid-template-columns: minmax(0, 1fr); }
+    .dashboardCard, .resumenHistorial article { padding: 12px; overflow-wrap: anywhere; }
+    .dashboardCard strong, .resumenHistorial strong { font-size: 19px; }
+    .btnSelectorFormato { padding-inline: 8px; }
+  }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
   }
+}
+.documentoImpresionModal { display: none; }
+
+@media print {
+  html:has(.documentoImpresionModal), body:has(.documentoImpresionModal) { overflow: visible !important; }
+  body:has(.documentoImpresionModal) #root { display: none !important; }
+  .documentoImpresionModal { display: block; }
+  .documentoImpresionModal .comprobantePrevisualizacion { display: block; padding: 0; }
+}
+
+.fotoProductoVistaPrevia {
+  display: block;
+  width: 100%;
+  height: 128px;
+  object-fit: contain;
+  background: #f1f5f9;
+  border-radius: 8px;
+}
+
+.fotoProductoEstado {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.inventarioCardImagen img.fotoProductoAjustada,
+.productoImagenContenedor img.fotoProductoAjustada {
+  object-fit: contain;
+  transform: none;
 }

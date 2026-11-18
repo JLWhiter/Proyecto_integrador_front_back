@@ -37,4 +37,7 @@ public class Producto {
 
     @Column(length = 80)
     private String categoria;
+
+    @Column(columnDefinition = "MEDIUMTEXT")
+    private String imagen;
 }

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Mail, Phone, Search, UserCheck, Users, X } from 'lucide-react';
+import { Mail, Phone, Search, Users, X } from 'lucide-react';
 import { clienteService } from '../services/api';
 import Alerta from '../components/Alerta';
 
-export default function Clientes({ setVista }) {
+export default function Clientes() {
   const [clientes, setClientes] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [busqueda, setBusqueda] = useState('');
@@ -32,13 +32,12 @@ export default function Clientes({ setVista }) {
     <section className="clientesSeccion">
       <div className="heroPanel no-print">
         <div>
-          <span className="miniTag">Clientes</span>
-          <h2>Clientes registrados</h2>
+          <h2>Directorio de clientes</h2>
           <p>Encuentra los datos de contacto de los clientes de la tienda.</p>
         </div>
         <div className="badgeContadorGeneral">
           <Users size={18} />
-          <span>{clientes.length} clientes registrados</span>
+          <span>{busqueda.trim() ? `${filtrados.length} de ${clientes.length} clientes` : `${clientes.length} clientes registrados`}</span>
         </div>
       </div>
 
@@ -48,12 +47,14 @@ export default function Clientes({ setVista }) {
         <div className="inputIcono inputBusquedaHistorial">
           <Search size={18} />
           <input
-            placeholder="Buscar cliente por DNI/ID, nombre, correo o teléfono..."
+            type="search"
+            aria-label="Buscar clientes"
+            placeholder="Nombre, código, correo o teléfono"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
           />
           {busqueda && (
-            <button className="btnLimpiarSearch" onClick={() => setBusqueda('')}>
+            <button type="button" className="btnLimpiarSearch" aria-label="Limpiar búsqueda" onClick={() => setBusqueda('')}>
               <X size={15} />
             </button>
           )}
@@ -68,12 +69,12 @@ export default function Clientes({ setVista }) {
         <div className="clientesGrid">
           {filtrados.map((cli) => (
             <article key={cli.idCliente} className="clienteCard">
-              <div className="clienteAvatar">
-                <UserCheck size={24} />
+              <div className="clienteAvatar" aria-hidden="true">
+                {`${cli.nombre?.trim().charAt(0) || ''}${cli.apellido?.trim().charAt(0) || ''}`.toUpperCase()}
               </div>
               <div className="clienteInfo">
-                <span className="clienteIdTag">{cli.idCliente}</span>
                 <h3>{cli.nombre} {cli.apellido}</h3>
+                <span className="clienteIdTag">{cli.idCliente}</span>
                 
                 <div className="clienteDetalles">
                   <div className="clienteDatoItem">

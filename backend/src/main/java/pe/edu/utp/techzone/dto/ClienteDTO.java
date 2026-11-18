@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class ClienteDTO {
     @NotBlank
     @jakarta.validation.constraints.Size(max=20)
+    @jakarta.validation.constraints.Pattern(regexp = "[A-Za-z0-9][A-Za-z0-9._-]{2,19}")
     private String idCliente;
 
     @NotBlank
@@ -30,5 +31,6 @@ public class ClienteDTO {
     private String correo;
     @NotBlank
     @jakarta.validation.constraints.Size(min=6,max=128)
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
     private String password;
 }

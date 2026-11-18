@@ -85,6 +85,7 @@ CREATE TABLE producto (
     stock       INT            NOT NULL CHECK (stock >= 0),
     precio      DECIMAL(10, 2) NOT NULL CHECK (precio >= 0),
     categoria   VARCHAR(80)    NOT NULL,
+    imagen      MEDIUMTEXT,
     activo BOOLEAN NOT NULL DEFAULT TRUE,
     PRIMARY KEY (id_producto)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -1,7 +1,9 @@
 package pe.edu.utp.techzone.exception;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -12,7 +14,6 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
     @ExceptionHandler(ConsultaDocumentoException.class)
     public ResponseEntity<Map<String, Object>> consultaDocumento(ConsultaDocumentoException ex) {
         return response(ex.getStatus(), ex.getMessage());
@@ -45,10 +46,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> general(Exception ex) {
+        if (ex instanceof ErrorResponse http) {
+            var body = response(http.getStatusCode(), http.getBody().getDetail()).getBody();
+            return ResponseEntity.status(http.getStatusCode()).headers(http.getHeaders()).body(body);
+        }
         return response(HttpStatus.INTERNAL_SERVER_ERROR, "No se pudo completar la operación. Intenta nuevamente.");
     }
 
-    private ResponseEntity<Map<String, Object>> response(HttpStatus status, String message) {
+    private ResponseEntity<Map<String, Object>> response(HttpStatusCode status, String message) {
         Map<String, Object> body = new HashMap<>();
         body.put("fecha", LocalDateTime.now());
         body.put("estado", status.value());

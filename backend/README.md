@@ -7,7 +7,7 @@ Spring Boot, Java 24+, MySQL 8.0.16+ y H2 para pruebas.
 Ejecutar `database/script_mysql.sql` en MySQL Workbench o DBeaver. Crea la base
 `proyecto`, tablas, indices, vista y datos de demostracion. Se detiene si detecta
 tablas existentes: no elimina datos ni sirve para actualizar una instalacion.
-Configurar URL/usuario/clave en `src/main/resources/application.properties`.
+Configurar `MYSQL_URL`, `MYSQL_USER` y `MYSQL_PASSWORD` en el entorno del backend.
 Desde backend ejecutar `mvn spring-boot:run`.
 
 ## Base existente: migracion 001
@@ -31,6 +31,9 @@ diferentes en el pasado. No es posible recuperar datos que nunca se almacenaron.
 
 ## Cambios
 
+Las instalaciones MySQL existentes deben aplicar `database/migrations/002_imagen_producto.sql`
+después de la migración 001. Una instalación nueva ya incluye la columna de imagen.
+
 - DNI/RUC, razon social y direccion se guardan separados del numero de comprobante.
 - Numeros generados en servidor mediante secuencias bloqueadas por serie.
 - Nombre del cliente/producto, tasa IGV e impuesto por detalle quedan guardados.
@@ -45,7 +48,6 @@ diferentes en el pasado. No es posible recuperar datos que nunca se almacenaron.
 - Carrito consulta IGV en `/api/catalogos/parametros`; reportes suman el IGV
   historico de las ventas del mes.
 
-No se implementa conexion SUNAT ni un sistema nuevo de autorizacion de endpoints.
 Los comprobantes siguen siendo documentos locales. El perfil PostgreSQL es
 heredado y no forma parte de esta migracion.
 
@@ -53,7 +55,25 @@ heredado y no forma parte de esta migracion.
 
 Para arrancar H2: `mvn spring-boot:run '-Dspring-boot.run.profiles=h2'`.
 H2 guarda datos en memoria y los pierde al detener el proceso.
-Consola: http://localhost:8080/h2-console.
+La consola web de H2 está desactivada.
+
+## Seguridad y conexión del frontend
+
+La API establece una sesión que vence tras 30 minutos de inactividad mediante una cookie HttpOnly, SameSite=Lax.
+El frontend incluye la cookie en las solicitudes. Las operaciones de escritura
+exigen la cabecera `X-Requested-With: TechZone`. Los clientes solo consultan sus
+propios datos y registran compras a su nombre. La administración de productos,
+los reportes globales y el directorio de clientes requieren una cuenta administrativa.
+El acceso y el registro admiten hasta 40 solicitudes por minuto por dirección IP.
+La consulta de documentos admite hasta 15 solicitudes por minuto por cuenta.
+
+En local, usa el mismo nombre de host para frontend y backend (por ejemplo,
+`localhost` en ambos, aunque estén en puertos distintos). Para un despliegue
+con HTTPS y frontend/API del mismo sitio, activa `SESSION_COOKIE_SECURE=true`
+y configura `APP_CORS_ALLOWED_ORIGIN` con los orígenes exactos. Usa una cuenta
+MySQL dedicada para el backend y sustituye las credenciales demo antes de publicar.
+La API escucha en la interfaz local de forma predeterminada. Configura
+`SERVER_ADDRESS` si tu infraestructura necesita otra interfaz.
 
 Desde PowerShell ejecutar `./verify-database.ps1`. Permite indicar la ruta de Maven
 con `-Maven 'C:/ruta/bin/mvn.cmd'`. La prueba de integracion es independiente de
@@ -165,8 +185,8 @@ npm run build
 ```
 
 Playwright usa Chrome instalado (canal `chrome`), sin descargar navegadores.
-Las ocho pruebas cubren API/CORS/validaciones, navegacion administrativa y ambos
-formatos de comprobante, inventario completo, compra manual, consulta DNI/RUC
+Las pruebas cubren API/CORS/validaciones, permisos por rol y por dueño, navegación
+administrativa, diseño responsive, ambos formatos de comprobante, inventario completo, compra manual, consulta DNI/RUC
 simulada con compra de factura, cancelacion de respuesta antigua, registro de
 cliente y recuperacion ante datos corruptos del navegador. Se detectan errores
 JavaScript de pagina. Fotos externas se sustituyen en las pruebas para no

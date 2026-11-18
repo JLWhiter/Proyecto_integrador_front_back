@@ -23,7 +23,7 @@ export default function ProductoCard({ producto, onAgregar }) {
         <img
           src={imagenUrl}
           alt={producto.nombre}
-          className="productoImgReal"
+          className={producto.imagen ? 'productoImgReal fotoProductoAjustada' : 'productoImgReal'}
           loading="lazy"
           onError={(e) => {
             e.target.onerror = null;

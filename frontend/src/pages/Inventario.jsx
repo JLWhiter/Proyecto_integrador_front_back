@@ -3,8 +3,9 @@ import { AlertCircle, Edit2, Plus, Search, Trash2, X } from 'lucide-react';
 import { productoService } from '../services/api';
 import { formatoMoneda } from '../utils/format';
 import Alerta from '../components/Alerta';
-import { obtenerImagenProducto } from '../utils/productImages';
+import { obtenerImagenProducto, optimizarFotoProducto } from '../utils/productImages';
 import { useDialogo } from '../context/DialogoContext';
+import Modal from '../components/Modal';
 
 export default function Inventario() {
   const { confirmar } = useDialogo();
@@ -20,6 +21,9 @@ export default function Inventario() {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
   const [guardando, setGuardando] = useState(false);
+  const [procesandoFoto, setProcesandoFoto] = useState(false);
+  const [foto, setFoto] = useState(null);
+  const [errorFoto, setErrorFoto] = useState('');
   const [form, setForm] = useState({
     idProducto: '',
     nombre: '',
@@ -57,6 +61,8 @@ export default function Inventario() {
 
   function abrirModalNuevo() {
     setModoEdicion(false);
+    setFoto(null);
+    setErrorFoto('');
     const maxId = productos.reduce((max, p) => Math.max(max, Number(p.idProducto) || 0), 0);
     setForm({
       idProducto: maxId + 1,
@@ -73,12 +79,15 @@ export default function Inventario() {
 
   function abrirModalEditar(prod) {
     setModoEdicion(true);
+    setFoto(null);
+    setErrorFoto('');
     setForm({
       idProducto: prod.idProducto,
       nombre: prod.nombre,
       stock: prod.stock,
       precio: prod.precio,
-      categoria: prod.categoria || 'General'
+      categoria: prod.categoria || 'General',
+      imagen: prod.imagen
     });
     setErroresModal({});
     setModalAbierto(true);
@@ -106,10 +115,39 @@ export default function Inventario() {
     return Object.keys(errores).length === 0;
   }
 
+  async function seleccionarFoto(event) {
+    const archivo = event.currentTarget.files[0];
+    event.currentTarget.value = '';
+    if (!archivo) return;
+    setProcesandoFoto(true);
+    setErrorFoto('');
+    try {
+      const vistaPrevia = await optimizarFotoProducto(archivo);
+      setFoto({ nombre: archivo.name, vistaPrevia });
+    } catch (error) {
+      setErrorFoto(error instanceof DOMException ? 'No se pudo abrir la foto. Selecciona una imagen compatible.' : error.message);
+    } finally {
+      setProcesandoFoto(false);
+    }
+  }
+
+  const modalOcupado = guardando || procesandoFoto;
+
+  function cerrarModal() {
+    if (!modalOcupado) setModalAbierto(false);
+  }
+
   async function guardarProducto(e) {
     e.preventDefault();
     
-    if (!validarModal()) {
+    if (modalOcupado || errorFoto || !validarModal()) {
+      return;
+    }
+
+    const errorServidorImagen = 'El servidor no admite guardar fotos de productos. Abre la versión actualizada del sistema y vuelve a intentarlo.';
+    const productoDeReferencia = modoEdicion ? form : productos[0];
+    if (foto && productoDeReferencia && productoDeReferencia.imagen === undefined) {
+      setErroresModal({ general: errorServidorImagen });
       return;
     }
 
@@ -123,21 +161,29 @@ export default function Inventario() {
         nombre: form.nombre.trim(),
         stock: Number(form.stock),
         precio: Number(form.precio),
-        categoria: form.categoria
+        categoria: form.categoria,
+        imagenDatos: foto?.vistaPrevia.split(',')[1]
       };
 
-      if (modoEdicion) {
-        await productoService.actualizar(payload.idProducto, payload);
-        setExito(`Producto "${payload.nombre}" actualizado correctamente.`);
-      } else {
-        await productoService.crear(payload);
-        setExito(`Producto "${payload.nombre}" creado correctamente.`);
+      const guardado = await (modoEdicion
+        ? productoService.actualizar(payload.idProducto, payload)
+        : productoService.crear(payload));
+      if (foto && !guardado?.imagen) {
+        if (!modoEdicion && guardado?.idProducto) {
+          // The product exists. Retry the image as an edit so the ID stays valid.
+          setModoEdicion(true);
+          setForm((actual) => ({ ...actual, idProducto: guardado.idProducto, imagen: guardado.imagen }));
+          cargarProductos();
+        }
+        throw new Error(errorServidorImagen);
       }
 
+      const accion = modoEdicion ? 'actualizado' : 'creado';
+      setExito(`Producto "${payload.nombre}" ${accion} correctamente.`);
       setModalAbierto(false);
       cargarProductos();
     } catch (err) {
-      setMensaje(err.message || 'Error al guardar producto.');
+      setErroresModal((errores) => ({ ...errores, general: err.message || 'Error al guardar producto.' }));
     } finally {
       setGuardando(false);
     }
@@ -227,6 +273,7 @@ export default function Inventario() {
               <article key={prod.idProducto} className="inventarioCard">
                 <div className="inventarioCardImagen">
                   <img src={obtenerImagenProducto(prod)} alt={prod.nombre} loading="lazy"
+                    className={prod.imagen ? 'fotoProductoAjustada' : undefined}
                     onError={(event) => {
                       event.currentTarget.onerror = null;
                       event.currentTarget.src = '/producto-placeholder.svg';
@@ -262,15 +309,8 @@ export default function Inventario() {
 
       {/* Modal para Crear / Editar producto */}
       {modalAbierto && (
-        <div className="modalOverlay" onClick={() => setModalAbierto(false)}>
-          <div className="modalContenido" onClick={(e) => e.stopPropagation()}>
-            <div className="modalHeader">
-              <h3>{modoEdicion ? 'Editar producto' : 'Registrar producto'}</h3>
-              <button className="btnCerrarModal" onClick={() => setModalAbierto(false)}>
-                <X size={18} />
-              </button>
-            </div>
-
+        <Modal titulo={modoEdicion ? 'Editar producto' : 'Registrar producto'}
+          className="modalProducto" onCerrar={cerrarModal} bloqueado={modalOcupado}>
             <form onSubmit={guardarProducto} className="formulario modalFormulario">
               <label>
                 Código del producto
@@ -349,25 +389,49 @@ export default function Inventario() {
                 {erroresModal.stock && <div className="mensajeErrorCampo"><AlertCircle size={13}/> {erroresModal.stock}</div>}
               </label>
 
+              <label>
+                Foto del producto
+                <input type="file" accept="image/*" onChange={seleccionarFoto} disabled={modalOcupado} />
+              </label>
+              {procesandoFoto && <span role="status">Ajustando foto…</span>}
+              {foto && !procesandoFoto && !errorFoto && (
+                <small className="fotoProductoEstado" role="status">
+                  {foto.nombre}. Pulsa {modoEdicion ? 'Guardar cambios' : 'Crear producto'} para aplicar la foto.
+                </small>
+              )}
+              {errorFoto && (
+                <div role="alert" className="mensajeErrorCampo">
+                  {errorFoto}
+                  <button type="button" className="btnSecundario" onClick={() => setErrorFoto('')}>Descartar selección</button>
+                </div>
+              )}
+              {(foto || modoEdicion) && (
+                <img className="fotoProductoVistaPrevia" src={foto?.vistaPrevia || obtenerImagenProducto(form)}
+                  alt="Vista previa de la foto del producto"
+                  onError={(event) => { event.currentTarget.src = '/producto-placeholder.svg'; }} />
+              )}
+              {erroresModal.general && (
+                <div role="alert" className="mensajeErrorCampo">{erroresModal.general}</div>
+              )}
               <div className="modalAcciones">
                 <button
                   type="button"
                   className="btnSecundario"
-                  onClick={() => setModalAbierto(false)}
+                  onClick={cerrarModal}
+                  disabled={modalOcupado}
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   className="btnPrincipal"
-                  disabled={guardando}
+                  disabled={modalOcupado || Boolean(errorFoto)}
                 >
                   {guardando ? 'Guardando...' : modoEdicion ? 'Guardar cambios' : 'Crear producto'}
                 </button>
               </div>
             </form>
-          </div>
-        </div>
+        </Modal>
       )}
     </section>
   );

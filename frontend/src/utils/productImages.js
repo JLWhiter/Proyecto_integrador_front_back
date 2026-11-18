@@ -1,5 +1,7 @@
 // Catálogo de imágenes profesionales para los productos de TechZone
 
+import { API_URL } from '../services/api';
+
 const IMAGENES_PRODUCTOS = {
   // Laptops
   'laptop lenovo': 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=600&auto=format&fit=crop&q=80',
@@ -48,6 +50,7 @@ const IMAGEN_DEFAULT_TECH = 'https://images.unsplash.com/photo-1550009158-9ebf69
 
 export function obtenerImagenProducto(producto) {
   if (!producto) return IMAGEN_DEFAULT_TECH;
+  if (producto.imagen?.startsWith('/productos/')) return API_URL + producto.imagen;
   if (producto.imagen && producto.imagen.startsWith('http')) {
     return producto.imagen;
   }
@@ -75,4 +78,34 @@ export function obtenerImagenProducto(producto) {
   }
 
   return IMAGEN_DEFAULT_TECH;
+}
+export async function optimizarFotoProducto(archivo) {
+  if (archivo.size > 25 * 1024 * 1024) {
+    throw new Error('Selecciona una imagen de hasta 25 MB.');
+  }
+
+  const url = URL.createObjectURL(archivo);
+  try {
+    const imagen = new Image();
+    imagen.src = url;
+    await imagen.decode();
+
+    const escala = Math.min(1, 640 / Math.max(imagen.naturalWidth, imagen.naturalHeight));
+    const lienzo = document.createElement('canvas');
+    lienzo.width = Math.max(1, Math.round(imagen.naturalWidth * escala));
+    lienzo.height = Math.max(1, Math.round(imagen.naturalHeight * escala));
+    lienzo.getContext('2d').drawImage(imagen, 0, 0, lienzo.width, lienzo.height);
+
+    const prefijo = 'data:image/webp;base64,';
+    for (const calidad of [0.82, 0.65, 0.5]) {
+      const resultado = lienzo.toDataURL('image/webp', calidad);
+      if (!resultado.startsWith(prefijo)) {
+        throw new Error('Usa un navegador compatible con WebP.');
+      }
+      if (resultado.length - prefijo.length <= 350000) return resultado;
+    }
+    throw new Error('No se pudo comprimir la foto lo suficiente.');
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }

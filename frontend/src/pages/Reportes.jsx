@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { BarChart3, CalendarDays, Eye, FileCheck, Package, Printer, Users } from 'lucide-react';
 import { dashboardService, ventaService } from '../services/api';
 import { formatoFecha, formatoMoneda } from '../utils/format';
 import Alerta from '../components/Alerta';
+import { imprimir } from '../utils/imprimir';
 
-export default function Reportes({ setVista, setVentaGenerada }) {
+export default function Reportes({ setVista, abrirComprobante }) {
+  const reporteImpreso = useRef(null);
   const [datos, setDatos] = useState(null);
   const [ventas, setVentas] = useState([]);
   const [mensaje, setMensaje] = useState('');
@@ -51,18 +53,13 @@ export default function Reportes({ setVista, setVentaGenerada }) {
   const totalOpGravada = ventasMes.reduce((suma, venta) => suma + Number(venta.opGravada || 0), 0);
   const totalIgv = ventasMes.reduce((suma, venta) => suma + Number(venta.igv || 0), 0);
 
-  function abrirComprobante(venta) {
+  function verComprobante(venta) {
     const ventaCompleta = {
       ...venta,
       condicionPago: 'CONTADO',
       observaciones: 'Venta registrada en plataforma'
     };
-    if (setVentaGenerada) {
-      setVentaGenerada(ventaCompleta);
-    }
-    if (setVista) {
-      setVista('comprobante');
-    }
+    abrirComprobante(ventaCompleta);
   }
 
   const tarjetas = [
@@ -86,7 +83,7 @@ export default function Reportes({ setVista, setVentaGenerada }) {
               <FileCheck size={17} /> Ver comprobantes
             </button>
           )}
-          <button className="btnSecundario" onClick={() => window.print()}>
+          <button className="btnSecundario" onClick={() => imprimir(reporteImpreso.current)} disabled={cargando}>
             <Printer size={17} /> Imprimir reporte
           </button>
         </div>
@@ -203,7 +200,7 @@ export default function Reportes({ setVista, setVentaGenerada }) {
                         <td className="text-center">
                           <button
                             className="btnVerComprobante"
-                            onClick={() => abrirComprobante(venta)}
+                        onClick={() => verComprobante(venta)}
                           >
                             <Eye size={14} /> Ver Boleta / Factura
                           </button>
@@ -216,7 +213,7 @@ export default function Reportes({ setVista, setVentaGenerada }) {
             </div>
           </div>
 
-          <div className="soloImpresionReporte">
+          <div className="soloImpresionReporte" ref={reporteImpreso}>
             <div className="reporteImpresoHeader">
               <div>
                 <h2>DEMOMIFACT / TECHZONE S.A.C.</h2>

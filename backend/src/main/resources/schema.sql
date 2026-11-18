@@ -58,6 +58,7 @@ CREATE TABLE producto (
     stock       INT            NOT NULL CHECK (stock >= 0),
     precio      DECIMAL(10, 2) NOT NULL CHECK (precio >= 0),
     categoria   VARCHAR(80)    NOT NULL,
+    imagen      TEXT,
     activo BOOLEAN NOT NULL DEFAULT TRUE,
     PRIMARY KEY (id_producto)
 );

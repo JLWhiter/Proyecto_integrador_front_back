@@ -1,4 +1,6 @@
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { authService } from '../services/api';
+import { useDialogo } from './DialogoContext';
 
 const AppContext = createContext(null);
 
@@ -14,9 +16,9 @@ function leerStorage(clave, fallback, validar) {
 }
 
 export function AppProvider({ children }) {
-  const [sesion, setSesion] = useState(() => {
-    return leerStorage('sesion', null, (valor) => valor && typeof valor.id === 'string' && ['ADMIN', 'CLIENTE'].includes(valor.rol));
-  });
+  const { notificar } = useDialogo();
+  const [sesion, setSesion] = useState(null);
+  const [verificandoSesion, setVerificandoSesion] = useState(true);
   const [carrito, setCarrito] = useState(() => {
     return leerStorage('carrito', [], (valor) => Array.isArray(valor) && valor.every((item) =>
       item && Number.isInteger(item.idProducto) && typeof item.nombre === 'string'
@@ -28,24 +30,48 @@ export function AppProvider({ children }) {
   const cliente = sesion?.rol === 'CLIENTE' ? sesion : null;
   const esAdmin = sesion?.rol === 'ADMIN';
 
+  useEffect(() => {
+    let vigente = true;
+    try { localStorage.removeItem('sesion'); } catch { /* Storage is optional. */ }
+    authService.obtenerSesion()
+      .then((usuario) => { if (vigente) setSesion(usuario); })
+      .catch(() => {})
+      .finally(() => { if (vigente) setVerificandoSesion(false); });
+    const expirar = () => {
+      setSesion(null);
+      guardarCarrito([]);
+    };
+    window.addEventListener('techzone:sesion-expirada', expirar);
+    return () => {
+      vigente = false;
+      window.removeEventListener('techzone:sesion-expirada', expirar);
+    };
+  }, []);
+
   function guardarSesion(nuevaSesion) {
     setSesion(nuevaSesion);
-    localStorage.setItem('sesion', JSON.stringify(nuevaSesion));
     if (nuevaSesion?.rol !== 'CLIENTE') {
       guardarCarrito([]);
     }
   }
 
-  function cerrarSesion() {
+  async function cerrarSesion() {
+    try {
+      await authService.cerrar();
+    } catch (error) {
+      if (error.status !== 401) {
+        notificar({ tipo: 'error', mensaje: error.message });
+        return;
+      }
+    }
     setSesion(null);
     setCarrito([]);
-    localStorage.removeItem('sesion');
-    localStorage.removeItem('carrito');
+    try { localStorage.removeItem('carrito'); } catch { /* Storage is optional. */ }
   }
 
   function guardarCarrito(items) {
     setCarrito(items);
-    localStorage.setItem('carrito', JSON.stringify(items));
+    try { localStorage.setItem('carrito', JSON.stringify(items)); } catch { /* Storage is optional. */ }
   }
 
   function agregarProducto(producto) {
@@ -92,6 +118,7 @@ export function AppProvider({ children }) {
     <AppContext.Provider
       value={{
         sesion,
+        verificandoSesion,
         cliente,
         esAdmin,
         carrito,

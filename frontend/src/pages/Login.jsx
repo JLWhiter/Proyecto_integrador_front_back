@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { authService, clienteService } from '../services/api';
 import { useApp } from '../context/AppContext';
 import Alerta from '../components/Alerta';
-import { LockKeyhole, User, UserPlus, AlertCircle } from 'lucide-react';
+import Modal from '../components/Modal';
+import { AlertCircle, Cpu, Headphones, Keyboard, LockKeyhole, User, UserPlus } from 'lucide-react';
 
 export default function Login() {
   const { guardarSesion } = useApp();
@@ -35,8 +36,8 @@ export default function Login() {
       let nuevosErrores = {};
       let esValido = true;
 
-      if (!form.usuario || form.usuario.length < 3) {
-        nuevosErrores.usuario = 'Mínimo 3 caracteres';
+      if (!/^[A-Za-z0-9][A-Za-z0-9._-]{2,19}$/.test(form.usuario)) {
+        nuevosErrores.usuario = 'Usa de 3 a 20 caracteres. Empieza con una letra o número.';
         esValido = false;
       }
 
@@ -96,129 +97,151 @@ export default function Login() {
     }
   }
 
+  function cambiarModo(registrar) {
+    setModoRegistro(registrar);
+    setErrores({});
+    setMensaje('');
+  }
+
+  const formulario = (
+    <>
+      <Alerta tipo="error" mensaje={mensaje} />
+
+      <form onSubmit={enviar} className="formulario" noValidate={modoRegistro}>
+        <label>
+          Usuario
+          <div className="inputIcono">
+            <User size={18} />
+            <input
+              name="usuario"
+              value={form.usuario}
+              onChange={cambiar}
+              placeholder="Tu usuario"
+              autoComplete="username"
+              className={errores.usuario ? 'inputConError' : ''}
+              required
+            />
+          </div>
+          {errores.usuario && <div className="mensajeErrorCampo"><AlertCircle size={13}/> {errores.usuario}</div>}
+        </label>
+
+        {modoRegistro && (
+          <div className="registroGrid">
+            <label>
+              Nombre
+              <input
+                name="nombre"
+                value={form.nombre}
+                onChange={cambiar}
+                className={errores.nombre ? 'inputConError' : ''}
+                required
+              />
+              {errores.nombre && <div className="mensajeErrorCampo"><AlertCircle size={13}/> {errores.nombre}</div>}
+            </label>
+            <label>
+              Apellido
+              <input
+                name="apellido"
+                value={form.apellido}
+                onChange={cambiar}
+                className={errores.apellido ? 'inputConError' : ''}
+                required
+              />
+              {errores.apellido && <div className="mensajeErrorCampo"><AlertCircle size={13}/> {errores.apellido}</div>}
+            </label>
+            <label>
+              Teléfono
+              <input
+                name="telefono"
+                value={form.telefono}
+                onChange={cambiar}
+                className={errores.telefono ? 'inputConError' : ''}
+                required
+              />
+              {errores.telefono && <div className="mensajeErrorCampo"><AlertCircle size={13}/> {errores.telefono}</div>}
+            </label>
+            <label>
+              Correo
+              <input
+                type="email"
+                name="correo"
+                value={form.correo}
+                onChange={cambiar}
+                className={errores.correo ? 'inputConError' : ''}
+                required
+              />
+              {errores.correo && <div className="mensajeErrorCampo"><AlertCircle size={13}/> {errores.correo}</div>}
+            </label>
+          </div>
+        )}
+
+        <label>
+          Contraseña
+          <div className="inputIcono">
+            <LockKeyhole size={18} />
+            <input
+              type="password"
+              name="password"
+              value={form.password}
+              onChange={cambiar}
+              placeholder="Tu contraseña"
+              autoComplete={modoRegistro ? 'new-password' : 'current-password'}
+              className={errores.password ? 'inputConError' : ''}
+              required
+            />
+          </div>
+          {errores.password && <div className="mensajeErrorCampo"><AlertCircle size={13}/> {errores.password}</div>}
+        </label>
+
+        <button className="btnPrincipal btnGrande" disabled={cargando}>
+          {cargando ? 'Validando...' : modoRegistro ? 'Registrar e iniciar sesión' : 'Iniciar sesión'}
+        </button>
+      </form>
+    </>
+  );
+
   return (
     <main className="loginShell">
-      <section className="loginHero">
-        <img className="loginMarca" src="/logo.png" alt="TechZone" />
-        <div className="brandBadge">Hardware · Periféricos · Gaming</div>
-        <h1>Equipa tu<br /><em>siguiente partida.</em></h1>
-        <p>Equipos, periféricos y accesorios para armar tu setup. Encuentra lo que necesitas y lleva el control de tus compras en un solo lugar.</p>
-        <div className="loginStats">
-          <span>Equipos y componentes</span>
-          <span>Periféricos</span>
-          <span>Accesorios</span>
+      <section className="loginHero" aria-labelledby="login-titulo">
+        <img className="loginArte" src="/login-gamer.webp" alt="" fetchPriority="high" />
+        <div className="loginHeroTexto">
+          <h1 id="login-titulo">Equipa tu <em>siguiente partida.</em></h1>
+          <p>Hardware, periféricos y accesorios gamer.</p>
         </div>
-        <small className="loginPie">TECHZONE / EL SIGUIENTE NIVEL DE TU SETUP</small>
       </section>
-
       <section className="authCard authCardModerna">
-        <div className="authHeader">
-          <span className="miniTag">{modoRegistro ? 'Registro de cliente' : 'Acceso al sistema'}</span>
-          <h2>{modoRegistro ? 'Crear cuenta' : 'Iniciar sesión'}</h2>
-          <p>{modoRegistro ? 'Crea tu cuenta y empieza a explorar la tienda.' : 'Accede a tus compras o administra la tienda.'}</p>
-        </div>
-
-        <Alerta tipo="error" mensaje={mensaje} />
-
-        <form onSubmit={enviar} className="formulario" noValidate={modoRegistro}>
-          <label>
-            Usuario
-            <div className="inputIcono">
-              <User size={18} />
-              <input 
-                name="usuario" 
-                value={form.usuario} 
-                onChange={cambiar} 
-                placeholder="Tu usuario"
-                autoComplete="username"
-                className={errores.usuario ? 'inputConError' : ''}
-                required 
-              />
-            </div>
-            {errores.usuario && <div className="mensajeErrorCampo"><AlertCircle size={13}/> {errores.usuario}</div>}
-          </label>
-
-          {modoRegistro && (
-            <div className="registroGrid">
-              <label>
-                Nombre
-                <input 
-                  name="nombre" 
-                  value={form.nombre} 
-                  onChange={cambiar} 
-                  className={errores.nombre ? 'inputConError' : ''}
-                  required 
-                />
-                {errores.nombre && <div className="mensajeErrorCampo"><AlertCircle size={13}/> {errores.nombre}</div>}
-              </label>
-              <label>
-                Apellido
-                <input 
-                  name="apellido" 
-                  value={form.apellido} 
-                  onChange={cambiar} 
-                  className={errores.apellido ? 'inputConError' : ''}
-                  required 
-                />
-                {errores.apellido && <div className="mensajeErrorCampo"><AlertCircle size={13}/> {errores.apellido}</div>}
-              </label>
-              <label>
-                Teléfono
-                <input 
-                  name="telefono" 
-                  value={form.telefono} 
-                  onChange={cambiar} 
-                  className={errores.telefono ? 'inputConError' : ''}
-                  required
-                />
-                {errores.telefono && <div className="mensajeErrorCampo"><AlertCircle size={13}/> {errores.telefono}</div>}
-              </label>
-              <label>
-                Correo
-                <input 
-                  type="email" 
-                  name="correo" 
-                  value={form.correo} 
-                  onChange={cambiar} 
-                  className={errores.correo ? 'inputConError' : ''}
-                  required
-                />
-                {errores.correo && <div className="mensajeErrorCampo"><AlertCircle size={13}/> {errores.correo}</div>}
-              </label>
-            </div>
-          )}
-
-          <label>
-            Contraseña
-            <div className="inputIcono">
-              <LockKeyhole size={18} />
-              <input 
-                type="password" 
-                name="password" 
-                value={form.password} 
-                onChange={cambiar} 
-                placeholder="Tu contraseña"
-                autoComplete={modoRegistro ? 'new-password' : 'current-password'}
-                className={errores.password ? 'inputConError' : ''}
-                required 
-              />
-            </div>
-            {errores.password && <div className="mensajeErrorCampo"><AlertCircle size={13}/> {errores.password}</div>}
-          </label>
-
-          <button className="btnPrincipal btnGrande" disabled={cargando}>
-            {cargando ? 'Validando...' : modoRegistro ? 'Registrar e iniciar sesión' : 'Iniciar sesión'}
+        <div className="loginAcceso">
+          <img className="loginMarca" src="/logo.png" alt="TechZone" />
+          <div className="authHeader">
+            <h2>Iniciar sesión</h2>
+            <p>Accede a tus compras o administra la tienda.</p>
+          </div>
+          {!modoRegistro && formulario}
+          <button type="button" className="btnLink" onClick={() => cambiarModo(true)} disabled={cargando}>
+            <UserPlus size={16} aria-hidden="true" /> Crear cuenta de cliente
           </button>
-        </form>
-
-        <button className="btnLink" onClick={() => {
-          setModoRegistro(!modoRegistro);
-          setErrores({});
-          setMensaje('');
-        }}>
-          <UserPlus size={16} /> {modoRegistro ? 'Ya tengo cuenta' : 'Registrar nuevo cliente'}
-        </button>
+        </div>
       </section>
+      <ul className="loginCategorias" aria-label="Categorías de la tienda">
+        <li>
+          <Cpu aria-hidden="true" />
+          <div><strong>Equipos y componentes</strong><span>Laptops, monitores y almacenamiento</span></div>
+        </li>
+        <li>
+          <Keyboard aria-hidden="true" />
+          <div><strong>Periféricos</strong><span>Teclados, mouse y cámaras web</span></div>
+        </li>
+        <li>
+          <Headphones aria-hidden="true" />
+          <div><strong>Audio y accesorios</strong><span>Audífonos, micrófonos y sillas gamer</span></div>
+        </li>
+      </ul>
+      {modoRegistro && (
+        <Modal titulo="Crear cuenta" className="modalRegistro" onCerrar={() => cambiarModo(false)} bloqueado={cargando}>
+          {formulario}
+          <button type="button" className="btnLink" onClick={() => cambiarModo(false)} disabled={cargando}>Ya tengo cuenta</button>
+        </Modal>
+      )}
     </main>
   );
 }

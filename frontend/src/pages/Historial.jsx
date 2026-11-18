@@ -5,7 +5,7 @@ import { ventaService } from '../services/api';
 import { formatoFecha, formatoMoneda } from '../utils/format';
 import Alerta from '../components/Alerta';
 
-export default function Historial({ setVista, setVentaGenerada }) {
+export default function Historial({ abrirComprobante }) {
   const { cliente, esAdmin } = useApp();
   const [ventas, setVentas] = useState([]);
   const [mensaje, setMensaje] = useState('');
@@ -67,11 +67,6 @@ export default function Historial({ setVista, setVentaGenerada }) {
     };
   }, [filtradas]);
 
-  function verDetalle(venta) {
-    setVentaGenerada(venta);
-    setVista('comprobante');
-  }
-
   return (
     <section>
       <div className="pageHeader modernoHeader">
@@ -130,7 +125,7 @@ export default function Historial({ setVista, setVentaGenerada }) {
                   <td>{venta.tipoDocumento}</td>
                   <td>{venta.medioPago}</td>
                   <td>{formatoMoneda(venta.total)}</td>
-                  <td><button onClick={() => verDetalle(venta)}>Ver</button></td>
+                  <td><button onClick={() => abrirComprobante(venta)}>Ver</button></td>
                 </tr>
               ))}
             </tbody>

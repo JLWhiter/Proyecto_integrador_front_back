@@ -6,7 +6,7 @@ export default defineConfig({
   workers: 1,
   timeout: 30000,
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: process.env.E2E_FRONTEND_URL || 'http://localhost:5173',
     channel: 'chrome',
     headless: true,
     screenshot: 'only-on-failure',

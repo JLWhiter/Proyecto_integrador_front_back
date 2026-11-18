@@ -5,7 +5,7 @@ import { formatoMoneda } from '../utils/format';
 import { ventaService, catalogoService, documentoService } from '../services/api';
 import Alerta from '../components/Alerta';
 
-export default function Carrito({ setVista, setVentaGenerada }) {
+export default function Carrito({ setVista, abrirComprobante, onProcesandoPago }) {
   const { cliente, carrito, total, cambiarCantidad, quitarProducto, limpiarCarrito } = useApp();
   const [tipoDocumento, setTipoDocumento] = useState('TD001');
   const [medioPago, setMedioPago] = useState('MP004');
@@ -20,7 +20,6 @@ export default function Carrito({ setVista, setVentaGenerada }) {
   const consultaActual = useRef(null);
   const [docError, setDocError] = useState('');
   const [mensaje, setMensaje] = useState('');
-  const [exito, setExito] = useState('');
   const [cargando, setCargando] = useState(false);
 
   const medios = [
@@ -139,7 +138,6 @@ export default function Carrito({ setVista, setVentaGenerada }) {
   async function registrarVenta() {
     if (consultando) return;
     setMensaje('');
-    setExito('');
 
     if (!cliente) {
       setMensaje('Debes iniciar sesión como cliente antes de pagar.');
@@ -184,16 +182,16 @@ export default function Carrito({ setVista, setVentaGenerada }) {
     };
 
     setCargando(true);
+    onProcesandoPago(true);
     try {
       const venta = await ventaService.registrar(request);
-      setVentaGenerada(venta);
+      abrirComprobante(venta);
       limpiarCarrito();
-      setExito('Compra registrada correctamente.');
-      setVista('comprobante');
     } catch (error) {
       setMensaje(error.message);
     } finally {
       setCargando(false);
+      onProcesandoPago(false);
     }
   }
 
@@ -208,7 +206,6 @@ export default function Carrito({ setVista, setVentaGenerada }) {
       </div>
 
       <Alerta tipo="error" mensaje={mensaje} />
-      <Alerta tipo="ok" mensaje={exito} />
 
       {carrito.length === 0 ? (
         <div className="panelVacio">No tienes productos en el carrito.</div>
